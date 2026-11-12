@@ -1,0 +1,6 @@
+# Review ownership. GitHub review requests require accepted repository access.
+/app.py @devinuwa
+/src/menushift/engine.py @Ibrahim-KIA @devinuwa
+/tests/ @Ibrahim-KIA @devinuwa
+/docs/ @Ibrahim-KIA
+/data/ @Ibrahim-KIA

@@ -1,0 +1,6 @@
+option_id,dish_id,name,group,prep_minutes,energy_cost_ngn,labour_cost_ngn,other_cost_ngn,finished_weight_g,texture_tags,method_notes
+tofu_plain,suya,Plain marinated tofu,plant,35,45,65,0,115,soft mild juicy grilled,Firm tofu marinated and grilled; validate skewer integrity
+tofu_pressed,suya,Pressed tofu,plant,48,50,70,0,110,firm chewy smoky grilled,Press before marinading; weigh before and after
+tofu_frozen,suya,Frozen and thawed tofu,plant,110,160,100,0,113,chewy spongy porous smoky,Freeze and thaw safely; include cold-chain energy
+tofu_fried,suya,Pressed fried then grilled tofu,plant,65,95,90,0,115,crispy firm fried grilled,Count oil bought and absorbed; validate heat safety
+beef_suya,suya,Conventional beef suya,reference,55,65,85,0,110,meaty smoky grilled,Beef reference only; never recommend as plant-based

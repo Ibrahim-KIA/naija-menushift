@@ -1,0 +1,17 @@
+option_id,ingredient_id,purchase_g,nutrient_retention_fraction,item_notes
+tofu_plain,firm_tofu,140,0.95,Purchased weight demo only
+tofu_plain,groundnut,8,1,Peanut allergen
+tofu_plain,seasoning,5,1,Check vegan label
+tofu_pressed,firm_tofu,165,0.92,Press loss not measured
+tofu_pressed,groundnut,8,1,Peanut allergen
+tofu_pressed,seasoning,5,1,Check vegan label
+tofu_frozen,firm_tofu,175,0.91,Thaw loss not measured
+tofu_frozen,groundnut,8,1,Peanut allergen
+tofu_frozen,seasoning,5,1,Check vegan label
+tofu_fried,firm_tofu,165,0.9,Press+fry retention unverified
+tofu_fried,groundnut,8,1,Peanut allergen
+tofu_fried,seasoning,5,1,Check vegan label
+tofu_fried,vegetable_oil,14,1,Oil uptake unverified
+beef_suya,beef,130,0.93,Purchased weight demo only
+beef_suya,groundnut,8,1,Peanut allergen
+beef_suya,seasoning,5,1,Check ingredients
