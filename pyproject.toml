@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Hack the Fork Nigeria 2026: evidence-aware plant-based menu adaptation prototype"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["streamlit>=1.40,<2", "scikit-learn>=1.4,<2", "pandas>=2,<3"]
+dependencies = ["streamlit>=1.40,<2", "scikit-learn>=1.4,<2", "pandas>=2,<4"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.7,<1"]
