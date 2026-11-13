@@ -234,6 +234,11 @@ with summary:
             "or food-safety certified."
         )
         st.caption(f"Full serving cost: {choice.cost_ngn:,.0f} naira (ingredients plus processing).")
+        if not choice.allergen_review_complete:
+            st.warning(
+                "Some ingredient allergen labels have not been reviewed. The option may meet numeric constraints, "
+                "but it is not cleared for dietary restrictions or food service."
+            )
     else:
         st.error(
             "No plant option meets the chosen conditions. Adjust a constraint or add sourced "
@@ -320,6 +325,10 @@ with summary:
                 st.json(dict(row.score_breakdown), expanded=False)
             allergen_text = ", ".join(row.allergens) if row.allergens else "Not recorded. Do not assume this is safe."
             st.write("Recorded allergen labels: " + allergen_text)
+            st.caption(
+                "Allergen label review: "
+                + ("Recorded (not cross-contact certified)" if row.allergen_review_complete else "Incomplete")
+            )
             st.write("Source trace")
             for src in row.sources:
                 st.caption(src)
@@ -397,8 +406,8 @@ with stress:
 with methodology:
     st.subheader("Methods and safeguards")
     st.write("1. A dish has candidate formulations. Each formulation lists purchased ingredient weights, sources, a retention assumption, processing cost, time, and finished weight.")
-    st.write("2. Hard filters run first: plant-only, total budget, minimum estimated protein, preparation time, and recorded allergens. Beef never becomes eligible.")
-    st.write("3. Feasible options get a provisional score: 45% cost margin, 25% estimated protein, 15% preparation time, and 15% text match. The text term is either keyword overlap or experimental TF-IDF.")
+    st.write("2. Hard filters run first: plant-only, total budget, minimum estimated protein, preparation time, and recorded allergens. If an allergen exclusion is selected, unknown labels make that option ineligible. Beef never becomes eligible.")
+    st.write("3. Eligible options receive a provisional score: 45% cost margin, 25% diminishing-returns protein utility, 15% preparation time, and 15% text match. The minimum protein target is still a hard filter; the protein utility is a preference, not nutritional adequacy. The text term uses keyword overlap or experimental TF-IDF.")
     st.write("4. The same constraints are scored both ways and compared with the cheapest plant option and the cheapest feasible plant option. A difference is a score difference, not a taste result.")
     st.write("5. On the frozen synthetic cases, 'chewy smoky grilled' leads both text methods to pressed tofu instead of cheaper plain tofu. 'crispy fried' leads the keyword method to fried tofu, while TF-IDF still picks plain tofu. Weights were not changed to hide that disagreement.")
     st.write("6. Research mode stays closed until dated prices, food states, serving weights, and allergen review are entered. Moisture-adjusted nutrient notes are not treated as protein created by pressing.")
