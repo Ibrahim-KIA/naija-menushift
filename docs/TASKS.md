@@ -13,10 +13,10 @@
 
 ## Muhammad Inuwa — ranking, Streamlit and presentation
 - [x] Starter Streamlit app, results table, cost chart, rationale and text-retrieval scoring included as scaffolding.
-- [ ] Review/refactor ranking, calibrate weights and compare with baselines.
-- [ ] Improve attractive and accessible UX with explanations, uncertainty and reliable empty states.
-- [ ] Add a demonstrable, evaluated AI/recommendation contribution beyond a hardcoded scorer.
-- [ ] Run demo on 3 useful constraints and record reproducible results.
+- [x] Compare keyword and TF-IDF hybrids with cheapest baselines on a frozen synthetic set. Weights stay 45/25/15/15; that set does not justify retuning. See `docs/EVALUATION_PROTOCOL.md`.
+- [x] Decision studio shows cost split, protein, beef as a reference, ranker disagreement, and empty states for no-feasible and missing research files.
+- [x] Keyword overlap is the transparent baseline beside experimental TF-IDF. The crispy-fried case is a recorded disagreement, not a taste result.
+- [x] Three useful synthetic cases plus one impossible budget are presets in the app and recorded in `docs/EVALUATION_PROTOCOL.md`.
 
 ## Amina — research, sources and validation
 - [x] Data schema and editable blanks prepared in `data/verified`.

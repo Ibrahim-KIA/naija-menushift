@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .engine import baselines, evaluate, load_dataset, sensitivity
+from .engine import baselines, compare_rankers, evaluate, load_dataset, sensitivity
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -20,12 +20,17 @@ def main():
     parser.add_argument("--sensitivity", action="store_true")
     args = parser.parse_args()
     data = load_dataset(args.data_dir, demo=not args.verified)
-    kwargs = {"budget_ngn": args.budget, "protein_target_g": args.protein,
-                  "max_prep_minutes": args.max_prep, "preference": args.preference}
+    kwargs = {
+        "budget_ngn": args.budget,
+        "protein_target_g": args.protein,
+        "max_prep_minutes": args.max_prep,
+        "preference": args.preference,
+    }
     result = evaluate(data, args.dish, **kwargs)
     out = {"mode": "DEMO-SYNTHETIC" if data.demo else "VERIFIED-SOURCED",
            "dish": args.dish, "ranked_options": [r.to_dict() for r in result],
-           "baseline": baselines(result)}
+           "baseline": baselines(result),
+           "ranker_comparison": compare_rankers(data, args.dish, **kwargs)}
     if args.sensitivity:
         out["price_sensitivity"] = {k: [r.to_dict() for r in v]
                                      for k, v in sensitivity(data, args.dish, **kwargs).items()}

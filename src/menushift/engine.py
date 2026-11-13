@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import math
+import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import date
@@ -185,6 +186,29 @@ def _costs(data: Dataset, dish_id: str, price_shock: float) -> list[dict]:
     return results
 
 
+def _option_text(option: dict[str, str]) -> str:
+    return " ".join((option.get("name", ""), option.get("texture_tags", ""), option.get("method_notes", "")))
+
+
+def _tokens(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def _lexical_scores(options: Sequence[dict[str, str]], preference: str) -> dict[str, float]:
+    """Keyword baseline: share of preference tokens that appear in the option text.
+
+    This is a transparent overlap count, not a model of flavour or acceptance.
+    """
+    query = _tokens(preference)
+    if not query or not options:
+        return {o["option_id"]: 0.0 for o in options}
+    scores = {}
+    for option in options:
+        overlap = len(query & _tokens(_option_text(option))) / len(query)
+        scores[option["option_id"]] = overlap
+    return scores
+
+
 def _semantic_scores(options: Sequence[dict[str, str]], preference: str) -> dict[str, float]:
     """Small corpus TF-IDF retrieval as an experimental preference matching component.
 
@@ -197,7 +221,7 @@ def _semantic_scores(options: Sequence[dict[str, str]], preference: str) -> dict
         from sklearn.metrics.pairwise import cosine_similarity
     except ImportError:
         return {o["option_id"]: 0.0 for o in options}
-    corpus = [" ".join((o.get("name", ""), o.get("texture_tags", ""), o.get("method_notes", ""))) for o in options]
+    corpus = [_option_text(o) for o in options]
     corpus.append(preference)
     vectorizer = TfidfVectorizer(ngram_range=(1, 2), lowercase=True)
     vectors = vectorizer.fit_transform(corpus)
@@ -205,9 +229,20 @@ def _semantic_scores(options: Sequence[dict[str, str]], preference: str) -> dict
     return {o["option_id"]: float(similarity[i]) for i, o in enumerate(options)}
 
 
+def _text_scores(options: Sequence[dict[str, str]], preference: str, method: str) -> dict[str, float]:
+    if method == "lexical":
+        return _lexical_scores(options, preference)
+    if method == "tfidf":
+        return _semantic_scores(options, preference)
+    if method == "none":
+        return {o["option_id"]: 0.0 for o in options}
+    raise ValueError("text_method must be 'tfidf', 'lexical', or 'none'")
+
+
 def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g: float,
-             price_shock: float = 0.0, preference: str = "chewy grilled", 
-             max_prep_minutes: float = 180.0, avoid_allergens: Sequence[str] = ()) -> list[Evaluation]:
+             price_shock: float = 0.0, preference: str = "chewy grilled",
+             max_prep_minutes: float = 180.0, avoid_allergens: Sequence[str] = (),
+             text_method: str = "tfidf") -> list[Evaluation]:
     if not all(math.isfinite(v) for v in (budget_ngn, protein_target_g, max_prep_minutes, price_shock)):
         raise ValueError("Input values must be finite")
     if len(preference) > 200:
@@ -216,7 +251,7 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
         raise ValueError("Budget and max preparation time must be positive; protein target nonnegative")
     raw = _costs(data, dish_id, price_shock)
     options = [r["option"] for r in raw if r["option"]["group"] == "plant"]
-    semantic = _semantic_scores(options, preference)
+    semantic = _text_scores(options, preference, text_method)
     output = []
     for r in raw:
         op = r["option"]
@@ -249,7 +284,10 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
             breakdown = (("cost", round(0.45 * cost_score, 5)), ("protein", round(0.25 * protein_score, 5)), ("time", round(0.15 * time_score, 5)), ("text_match", round(0.15 * similarity, 5)))
             score = sum(value for _, value in breakdown)
             reasons.append("Passes budget, estimated protein and preparation constraints")
-            reasons.append(f"Preference text match: {similarity:.2f} (experimental, not taste evidence)")
+            reasons.append(
+                f"Preference text match ({text_method}): {similarity:.2f} "
+                "(experimental, not taste evidence)"
+            )
         else:
             score = None
         output.append(Evaluation(
@@ -262,6 +300,44 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
             score_breakdown=breakdown, ingredient_cost_ngn=round(r["ingredient_cost"],2), processing_cost_ngn=round(r["processing_cost"],2),
         ))
     return sorted(output, key=lambda x: (not x.feasible, -(x.score or 0), x.cost_ngn, x.option_id))
+
+
+def compare_rankers(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g: float,
+                    price_shock: float = 0.0, preference: str = "chewy grilled",
+                    max_prep_minutes: float = 180.0,
+                    avoid_allergens: Sequence[str] = ()) -> dict:
+    """Compare cheapest baselines with keyword and TF-IDF hybrids on one constraint set.
+
+    Hard filters are identical for every method. Text similarity never makes beef eligible
+    and never creates a recommendation when every plant option fails a constraint.
+    """
+    shared = {
+        "budget_ngn": budget_ngn,
+        "protein_target_g": protein_target_g,
+        "price_shock": price_shock,
+        "preference": preference,
+        "max_prep_minutes": max_prep_minutes,
+        "avoid_allergens": avoid_allergens,
+    }
+    lexical = baselines(evaluate(data, dish_id, text_method="lexical", **shared))
+    tfidf = baselines(evaluate(data, dish_id, text_method="tfidf", **shared))
+    if lexical["cheapest_feasible_plant"] != tfidf["cheapest_feasible_plant"]:
+        raise RuntimeError("Cheapest feasible option changed across text methods; constraints must be shared")
+    if lexical["no_feasible_option"] != tfidf["no_feasible_option"]:
+        raise RuntimeError("Feasibility changed across text methods")
+    keyword = lexical["recommended"]
+    hybrid = tfidf["recommended"]
+    cheapest = tfidf["cheapest_feasible_plant"]
+    abstained = bool(tfidf["no_feasible_option"])
+    return {
+        "cheapest_plant_unconstrained": tfidf["cheapest_plant_unconstrained"],
+        "cheapest_feasible_plant": cheapest,
+        "keyword_hybrid": keyword,
+        "tfidf_hybrid": hybrid,
+        "text_changes_winner": (not abstained) and (keyword != cheapest or hybrid != cheapest),
+        "methods_disagree": keyword != hybrid,
+        "abstained": abstained,
+    }
 
 
 def baselines(results: Sequence[Evaluation]) -> dict:

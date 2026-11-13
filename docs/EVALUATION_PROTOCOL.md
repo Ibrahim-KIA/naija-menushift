@@ -19,5 +19,18 @@
 - Protein, iron and zinc sums are provisional, not a nutrient quality or absorption guarantee.
 - Verify pressing, freezing, frying and grilling protocols (energy, oil, loss, storage). Collect sensory feedback in separate records, not fabricated numeric scores.
 
+## Synthetic benchmark notes (13 November 2026)
+
+**Status: recorded on `data/demo/` only.** Every naira amount and nutrient below is fictional. This is not a chef review, not a taste result, and not a statistically significant model comparison. Weights were left at 45% cost, 25% estimated protein, 15% preparation time, and 15% text. The frozen cases did not justify retuning: one case shows a tiny TF-IDF margin, and another shows TF-IDF failing to follow a clear keyword match.
+
+| Case | Constraints | Cheapest feasible | Keyword hybrid | TF-IDF hybrid | What happened |
+|---|---|---|---|---|---|
+| Normal serving | ₦1,500, 10 g, 120 min, "chewy smoky grilled" | plain marinated tofu (₦495) | pressed tofu (score 0.77050) | pressed tofu (score 0.67094) | Both text methods change the winner. The TF-IDF lead over plain tofu is about 0.002 score points. |
+| Crispy fried preference | ₦5,000, 5 g, 180 min, "crispy fried" | plain marinated tofu (₦495) | fried tofu (score 0.88459) | plain marinated tofu (score 0.77628) | Methods disagree. Keyword overlap selects fried tofu. TF-IDF similarity is too small (text term 0.035) to overturn the cheaper option. |
+| Short preparation window | ₦5,000, 5 g, 40 min, "chewy smoky grilled" | plain marinated tofu | plain marinated tofu | plain marinated tofu | Only one plant option is eligible. Text cannot change the winner. |
+| No feasible plant option | ₦1, 10 g, 120 min | none | abstain | abstain | Every ranker abstains. Beef (illustrative ₦1,213) stays a reference. |
+
+Soy exclusion on the same demo rows also makes every ranker abstain, because each plant recipe records soy. Repeating the same inputs reproduces the same order.
+
 ## Go / no-go
 If data are insufficient or all options violate constraints, show no feasible option. If restaurant reviews reject a treatment, label it experimental and revisit the pilot dish/ingredient rather than forcing a winner.

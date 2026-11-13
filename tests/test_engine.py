@@ -7,10 +7,6 @@ from menushift.engine import Dataset, baselines, evaluate, load_dataset, sensiti
 
 ROOT = Path(__file__).resolve().parents[1]
 
-@pytest.fixture
-def demo():
-    return load_dataset(ROOT / 'data' / 'demo', demo=True)
-
 def test_demo_loads_and_suya_has_four_plant_options_plus_beef(demo):
     results = evaluate(demo, 'suya', budget_ngn=2000, protein_target_g=5)
     assert len(results) == 5

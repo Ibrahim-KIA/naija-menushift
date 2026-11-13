@@ -6,7 +6,7 @@ require a qualified human review. No network calls, no hidden fallback data.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from math import isfinite
 from typing import TYPE_CHECKING
 
@@ -27,7 +27,7 @@ class Finding:
 
 def audit_dataset(data: Dataset, *, as_of: date | None = None) -> list[Finding]:
     """Warnings about evidence maturity; never implies clinical or food safety certification."""
-    today = as_of or date.today()
+    today = as_of or datetime.now(UTC).date()
     findings: list[Finding] = []
     for ing in data.ingredients:
         ident = ing.get("ingredient_id", "<unknown>")
