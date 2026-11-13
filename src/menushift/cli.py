@@ -2,6 +2,7 @@
 import argparse
 import json
 from pathlib import Path
+
 from .engine import baselines, evaluate, load_dataset, sensitivity
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,8 +20,8 @@ def main():
     parser.add_argument("--sensitivity", action="store_true")
     args = parser.parse_args()
     data = load_dataset(args.data_dir, demo=not args.verified)
-    kwargs = dict(budget_ngn=args.budget, protein_target_g=args.protein,
-                  max_prep_minutes=args.max_prep, preference=args.preference)
+    kwargs = {"budget_ngn": args.budget, "protein_target_g": args.protein,
+                  "max_prep_minutes": args.max_prep, "preference": args.preference}
     result = evaluate(data, args.dish, **kwargs)
     out = {"mode": "DEMO-SYNTHETIC" if data.demo else "VERIFIED-SOURCED",
            "dish": args.dish, "ranked_options": [r.to_dict() for r in result],
