@@ -13,7 +13,6 @@ from menushift.benchmark import (
 )
 from menushift.engine import load_dataset
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
