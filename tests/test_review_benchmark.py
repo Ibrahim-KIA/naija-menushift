@@ -9,7 +9,6 @@ from menushift.benchmark import (
     REVIEW_COLUMNS, benchmark_reviews, read_review_cases,
 )
 from menushift.engine import load_dataset
-from menushift.scenarios import scenario_by_id
 
 
 ROOT = Path(__file__).resolve().parents[1]
