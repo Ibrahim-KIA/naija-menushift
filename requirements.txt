@@ -1,0 +1,3 @@
+# Install this repository's Python package and its runtime dependencies from pyproject.toml.
+# Required by Streamlit Community Cloud to import the src/menushift package.
+-e .
