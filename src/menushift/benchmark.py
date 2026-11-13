@@ -14,7 +14,6 @@ from pathlib import Path
 
 from .engine import Dataset, compare_rankers, dish_options
 
-
 REVIEW_COLUMNS = (
     "case_id", "reviewer_id", "reviewer_role", "reviewed_on", "evidence_reference",
     "approval_status", "dish_id", "budget_ngn", "protein_target_g",
