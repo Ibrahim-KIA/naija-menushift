@@ -1,4 +1,5 @@
 """Human-reviewed benchmark rules. Fixtures in this file are SYNTHETIC."""
+
 import csv
 from datetime import date
 from pathlib import Path
@@ -6,7 +7,9 @@ from pathlib import Path
 import pytest
 
 from menushift.benchmark import (
-    REVIEW_COLUMNS, benchmark_reviews, read_review_cases,
+    REVIEW_COLUMNS,
+    benchmark_reviews,
+    read_review_cases,
 )
 from menushift.engine import load_dataset
 
