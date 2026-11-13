@@ -29,18 +29,18 @@ def test_no_feasible_budget_abstains_without_beef_recommendation():
     at = _run()
     at.number_input(key="budget").set_value(1.0).run()
     assert not at.exception
-    assert any("No plant-based option" in err.message for err in at.error)
+    assert any("No plant-based option" in err.value for err in at.error)
 
 
 def test_allergen_selection_prevents_unreviewed_and_soy_options():
     at = _run()
     at.multiselect(key="avoid").set_value(["soy"]).run()
     assert not at.exception
-    assert any("No plant-based option" in err.message for err in at.error)
+    assert any("No plant-based option" in err.value for err in at.error)
 
 
 def test_research_mode_has_no_synthetic_fallback():
     at = _run()
     at.sidebar.radio[0].set_value("Research data (requires evidence)").run()
     assert not at.exception
-    assert any("Research data unavailable" in err.message for err in at.error)
+    assert any("Research data unavailable" in err.value for err in at.error)
