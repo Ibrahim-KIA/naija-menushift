@@ -3,6 +3,7 @@
 A source spreadsheet or a synthetic scenario does not count as restaurant validation.
 This module refuses to report reviewer agreement unless explicitly approved labels exist.
 """
+
 from __future__ import annotations
 
 import csv
