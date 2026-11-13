@@ -1,7 +1,9 @@
-from pathlib import Path
 import copy
+from pathlib import Path
+
 import pytest
-from menushift.engine import load_dataset, evaluate, baselines, sensitivity, validate_dataset, Dataset
+
+from menushift.engine import Dataset, baselines, evaluate, load_dataset, sensitivity, validate_dataset
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -128,6 +130,7 @@ def test_eligible_options_report_explainable_components(demo):
 
 def test_audit_synthetic_data_and_stale_prices(demo):
     from datetime import date
+
     from menushift.quality import audit_dataset
     records = audit_dataset(demo, as_of=date(2027, 1, 1))
     codes = {r.code for r in records}

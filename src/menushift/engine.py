@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import csv
 import math
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
-from typing import Sequence
 
 from .quality import numeric_health
 
@@ -226,7 +226,7 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
         affordable = cost <= budget_ngn + 1e-7
         enough = protein + 1e-7 >= protein_target_g
         timely = prep <= max_prep_minutes
-        allergen_conflict = sorted(set(a.strip().lower() for a in avoid_allergens) & set(r["allergens"]))
+        allergen_conflict = sorted({a.strip().lower() for a in avoid_allergens} & set(r["allergens"]))
         feasible = plant and affordable and enough and timely and not allergen_conflict
         reasons = []
         if not plant:
