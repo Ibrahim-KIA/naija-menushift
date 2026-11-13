@@ -2,6 +2,7 @@
 
 AppTest does not verify pixel layout, screen readers, zoom or touch hit targets.
 """
+
 from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
