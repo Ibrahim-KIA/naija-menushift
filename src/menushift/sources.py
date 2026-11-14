@@ -1,8 +1,9 @@
 """Collected market and nutrition quotes that are not yet a verified recipe dataset.
 
-The CSVs are a local copy of Amina's workbook sheets. They do not contain ISO dates,
-a city, per-serving purchase weights, or an allergen review, so research mode stays closed.
-Moisture-adjusted nutrient rows are displayed as notes. They are not fed into scoring.
+The CSVs are a local copy of Amina's workbook sheets. Later NBS averages live in
+`nbs_2026.csv` and are applied by `official_prices.working_market_table`. Neither file
+fills `data/verified`: there is still no per-serving recipe, and moisture-adjusted
+nutrient rows are notes rather than scored protein.
 """
 from __future__ import annotations
 

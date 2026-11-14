@@ -1,8 +1,8 @@
 # Data integration — evidence gates and field guide
 
-**13 November 2026 | State: evidence intake, NOT verified operational recommendations**
+**14 November 2026 | State: interactive comparison from sourced prices; verified servings still closed**
 
-Amina's research is already recorded in `data/research/` and `data/sources/`. The research workbook is linked in `docs/AMINA_DATA_INTAKE_2026-11-13.md`. The Streamlit app intentionally uses fictional data until `data/verified/` contains reviewed, recipe-level inputs.
+The Streamlit studio compares the four awara methods with the workbook and the later 2026 NBS averages. It does not load `data/demo/`. Finished grams, the soy-yield note, minutes, oil, and spices are on-screen controls because the workbook has no measured serving. `data/verified/` stays empty.
 
 ## What is available and what is missing
 
