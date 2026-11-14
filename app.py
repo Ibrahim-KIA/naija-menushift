@@ -18,7 +18,7 @@ st.set_page_config(
     page_title="Naija MenuShift · Research Studio",
     page_icon="🌱",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(
@@ -38,10 +38,10 @@ h1 { font-size: clamp(1.8rem, 4vw, 3rem) !important; }
     unsafe_allow_html=True,
 )
 
-st.caption("HACK THE FORK NIGERIA 2026  /  CHALLENGE 02")
+st.caption("HACK THE FORK NIGERIA 2026 · CHALLENGE 2")
 st.title("Naija MenuShift")
-st.write("Explore plant-based menu alternatives with transparent evidence and constraints.")
-st.info("Research prototype. A person still has to review any menu change.")
+st.write("Find and compare plant-based alternatives for familiar Nigerian dishes.")
+st.info("Research prototype. Recommendations require human and kitchen review.")
 
 
 def _apply_scenario(scenario) -> None:
@@ -58,19 +58,20 @@ def _settings_ready() -> bool:
 
 def _option_label(option_id: str | None, names: dict[str, str]) -> str:
     if not option_id:
-        return "none (abstained)"
+        return "none (no eligible option)"
     return f"{names.get(option_id, option_id)} [{option_id}]"
 
 
 load_error: Exception | None = None
 data = None
 with st.sidebar:
-    st.header("Decision settings")
+    st.header("Research controls")
+    st.caption("These settings are for the project team. Start with the demonstration.")
     mode = st.radio(
         "Data source",
         ["Synthetic demonstration", "Research data (requires evidence)"],
         index=0,
-        help="Missing or incomplete research files stop the app. Demonstration numbers are never substituted.",
+        help="Research mode never falls back to synthetic data.",
     )
     demo = mode == "Synthetic demonstration"
     folder = ROOT / "data" / ("demo" if demo else "verified")
@@ -85,64 +86,19 @@ with st.sidebar:
             if any(option["dish_id"] == row["dish_id"] for option in data.options)
         }
         if not available:
-            load_error = ValueError("No dish has a complete set of candidate options yet.")
+            load_error = ValueError("No dish has any candidate formulations.")
             data = None
-    # Keep these widgets mounted in both modes. If they disappear, Streamlit recreates them at the minimum.
+
     if not _settings_ready():
         _apply_scenario(SYNTHETIC_SCENARIOS[0])
     if data is not None and demo:
-        st.subheader("Reproducible cases")
-        st.caption("Synthetic presets. The naira amounts are fictional.")
-        for scenario in SYNTHETIC_SCENARIOS:
-            if st.button(scenario.label, key=f"preset-{scenario.scenario_id}", use_container_width=True):
-                _apply_scenario(scenario)
-                st.rerun()
-    recorded = set()
-    if data is not None:
-        recorded = {
-            token.strip().lower()
-            for ingredient in data.ingredients
-            for token in ingredient.get("allergens", "").split(";")
-            if token.strip()
-        }
-    allergen_options = sorted(recorded | set(ALLERGEN_CHOICES))
-    if data is not None:
-        dish = st.selectbox("Existing menu item", list(available), format_func=lambda item: available[item])
-    budget = st.number_input(
-        "Maximum total cost per serving (naira)",
-        min_value=1.0,
-        max_value=100000.0,
-        step=50.0,
-        key="budget",
-    )
-    target = st.number_input(
-        "Minimum estimated protein (g)",
-        min_value=0.0,
-        max_value=150.0,
-        step=1.0,
-        key="protein",
-    )
-    prep = st.number_input(
-        "Maximum preparation time (minutes)",
-        min_value=1.0,
-        max_value=1440.0,
-        step=5.0,
-        key="prep",
-    )
-    preference = st.text_input(
-        "Preparation preference (experimental text matching)",
-        max_chars=200,
-        key="preference",
-        help="Compared with keyword overlap and TF-IDF. Neither score is a flavour or acceptance model.",
-    )
-    avoid = st.multiselect(
-        "Exclude declared allergens",
-        allergen_options,
-        key="avoid",
-        help="Only recorded labels are filtered. This cannot establish cross-contact safety.",
-    )
-    shock = st.slider("Ingredient price scenario", -20, 20, 0, step=5) / 100
-    st.caption("The slider changes purchased-ingredient cost only. It is a scenario, not a forecast.")
+        with st.expander("Try a demonstration scenario"):
+            st.caption("All budgets and nutrients in these presets are fictional.")
+            for scenario in SYNTHETIC_SCENARIOS:
+                if st.button(scenario.label, key=f"preset-{scenario.scenario_id}", use_container_width=True):
+                    _apply_scenario(scenario)
+                    st.rerun()
+
 
 if load_error is not None or data is None:
     st.error(f"Research data unavailable: {load_error}")
@@ -166,6 +122,48 @@ else:
         "Research files are loaded. Check every source, date, food state, and serving weight. "
         "A completed file is not a food-safety or nutrition certification.",
     )
+
+st.subheader("1. Choose a dish")
+dish = st.selectbox(
+    "Current restaurant menu item",
+    list(available),
+    format_func=lambda item: available[item],
+    help="Suya is the first completed pilot; more dishes need verified recipes.",
+)
+st.subheader("2. Set your requirements")
+bcol, pcol = st.columns(2)
+with bcol:
+    budget = st.number_input(
+        "Maximum cost per serving (₦)",
+        min_value=1.0, max_value=100000.0, step=50.0, key="budget",
+        help="Include ingredients and preparation costs.",
+    )
+with pcol:
+    target = st.number_input(
+        "Minimum estimated protein (g per serving)",
+        min_value=0.0, max_value=150.0, step=1.0, key="protein",
+        help="An estimated minimum, not a guarantee of nutritional adequacy.",
+    )
+preference = st.text_input(
+    "Desired preparation characteristics (optional)",
+    key="preference", max_chars=200,
+    placeholder="e.g., chewy and smoky",
+    help="Experimental word matching, not an assessment of flavour or taste.",
+)
+with st.expander("More requirements: allergens, preparation time and prices"):
+    prep = st.number_input(
+        "Maximum preparation time (minutes)",
+        min_value=1.0, max_value=1440.0, step=5.0, key="prep",
+    )
+    avoid = st.multiselect(
+        "Exclude these allergens",
+        ALLERGEN_CHOICES, key="avoid",
+        help="If an ingredient's label is unknown, it is excluded when a dietary restriction is selected.",
+    )
+    shock = st.slider(
+        "Ingredient price change (%)", -20, 20, 0, step=5,
+        help="A scenario, not a market forecast. Preparation costs remain fixed.",
+    ) / 100
 
 try:
     outputs = evaluate(
@@ -212,117 +210,77 @@ active = next(
 )
 
 summary, evidence, stress, methodology = st.tabs(
-    ["Recommendations", "Ingredient evidence", "Price resilience", "How it works"]
+    ["3. Recommendations", "Evidence & sources", "Price scenarios", "Research methods"]
 )
 with summary:
     if active is not None:
-        st.caption(active.note)
+        st.caption("Example scenario: " + active.label)
     if feasible:
         choice = feasible[0]
-        top_l, top_r = st.columns(2)
-        top_l.metric("Eligible plant option (TF-IDF hybrid)", choice.name)
-        top_r.metric("Status", "Eligible")
-        cost_l, cost_r = st.columns(2)
-        cost_l.metric("Ingredients / serving", f"{choice.ingredient_cost_ngn:,.0f} naira")
-        cost_r.metric("Processing / serving", f"{choice.processing_cost_ngn:,.0f} naira")
-        nut_l, nut_r = st.columns(2)
-        nut_l.metric("Estimated protein / serving", f"{choice.protein_g:.1f} g")
-        nut_r.metric("Preparation", f"{choice.prep_minutes:.0f} min")
-        st.success(
-            "This option passes the selected budget, estimated protein, preparation time, "
-            "and declared-allergen checks in the loaded file. It has not been taste-tested "
-            "or food-safety certified."
-        )
-        st.caption(f"Full serving cost: {choice.cost_ngn:,.0f} naira (ingredients plus processing).")
+        st.success("Eligible under the supplied numerical and ingredient-label constraints.")
+        st.subheader(choice.name)
+        st.metric("Total cost per serving", f"₦{choice.cost_ngn:,.0f}")
+        left, right = st.columns(2)
+        left.metric("Estimated protein", f"{choice.protein_g:.1f} g")
+        right.metric("Preparation time", f"{choice.prep_minutes:.0f} min")
+        st.caption("Ingredients + preparation are included in total cost. Nutrients are estimates.")
+        if not choice.allergen_review_complete:
+            st.warning(
+                "One or more ingredient labels have not been reviewed. This result is NOT "
+                "cleared for dietary restrictions or food service."
+            )
+        st.info("A qualifying score does not establish taste, food safety, or customer acceptance.")
+        with st.expander("Understand why this option was suggested", expanded=True):
+            for reason in choice.reasons:
+                st.write("- " + reason)
+            st.write("Estimated ingredients:", f"₦{choice.ingredient_cost_ngn:,.0f}")
+            st.write("Estimated preparation:", f"₦{choice.processing_cost_ngn:,.0f}")
+            st.caption("A simple, provisional weighted score; not a validated culinary AI model.")
+            if choice.score_breakdown:
+                st.json(dict(choice.score_breakdown), expanded=False)
+            st.caption("Ingredient references")
+            for source in choice.sources:
+                st.caption(source)
     else:
-        st.error(
-            "No plant option meets the chosen conditions. Adjust a constraint or add sourced "
-            "recipe weights. Beef is not moved into the plant results."
-        )
-        st.caption("Status: no feasible plant option.")
+        st.error("No plant-based option meets all of these requirements.")
+        st.write("Try increasing your budget, adjusting the protein target, or reviewing ingredient labels.")
+        blocked = [row for row in outputs if row.plant_only]
+        for row in blocked:
+            with st.expander("Why " + row.name + " was excluded"):
+                for reason in row.reasons:
+                    st.write("- " + reason)
+
+    with st.expander("Compare all options"):
+        rows = [
+            {
+                "Alternative": row.name,
+                "Cost / serving (₦)": row.cost_ngn,
+                "Est. protein (g)": row.protein_g,
+                "Eligibility": "Eligible" if row.feasible else "Excluded",
+            }
+            for row in outputs if row.plant_only
+        ]
+        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.caption("Research figures are not restaurant-validated; details and sources are in Evidence & sources.")
 
     if references:
-        st.subheader("Beef reference")
-        st.caption("Comparison only. This row is excluded from every plant ranking.")
-        beef = references[0]
-        beef_l, beef_r = st.columns(2)
-        beef_l.metric("Reference cost / serving", f"{beef.cost_ngn:,.0f} naira")
-        beef_r.metric("Reference estimated protein / serving", f"{beef.protein_g:.1f} g")
-        st.write(f"Reference name: {beef.name}. Status: Excluded from plant recommendations.")
+        with st.expander("Beef comparison (reference only)"):
+            beef = references[0]
+            st.write(beef.name)
+            st.metric("Reference serving cost", f"₦{beef.cost_ngn:,.0f}")
+            st.metric("Reference estimated protein", f"{beef.protein_g:.1f} g")
+            st.caption("Beef is never ranked or recommended as a plant-based alternative.")
 
-    st.subheader("Ranker comparison")
-    st.write("Cheapest plant, constraints ignored: " + _option_label(comparison["cheapest_plant_unconstrained"], names))
-    st.write("Cheapest feasible plant: " + _option_label(comparison["cheapest_feasible_plant"], names))
-    st.write("Keyword hybrid: " + _option_label(comparison["keyword_hybrid"], names))
-    st.write("TF-IDF hybrid: " + _option_label(comparison["tfidf_hybrid"], names))
-    if comparison["abstained"]:
-        st.error("Every ranker abstains. No plant option is eligible, so there is no recommendation.")
-    elif comparison["methods_disagree"]:
-        st.warning(
-            "Keyword overlap and TF-IDF name different options. That is a score difference "
-            "on this dataset, not evidence that one option tastes better."
-        )
-    elif comparison["text_changes_winner"]:
-        st.info(
-            "Both text methods name a different option than the cheapest feasible serving. "
-            "The weights are provisional and were not fitted on restaurant reviews."
-        )
-    else:
-        st.info("The text methods agree with the cheapest feasible option. The text term did not change the decision.")
-    st.caption(
-        f"Cheapest plant ignoring constraints: {base['cheapest_plant_unconstrained'] or 'none'}. "
-        f"Cheapest feasible: {base['cheapest_feasible_plant'] or 'none'}."
-    )
-
-    st.subheader("Decision comparison")
-    frame = pd.DataFrame(
-        [
-            {
-                "Option": row.name,
-                "Type": "Plant alternative" if row.plant_only else "Beef reference",
-                "Ingredients (naira)": row.ingredient_cost_ngn,
-                "Processing (naira)": row.processing_cost_ngn,
-                "Total cost (naira)": row.cost_ngn,
-                "Protein (g)": row.protein_g,
-                "Iron (mg)": row.iron_mg,
-                "Zinc (mg)": row.zinc_mg,
-                "Finished serving (g)": row.finished_g,
-                "Prep (min)": row.prep_minutes,
-                "Status": "Eligible" if row.feasible else "Excluded",
-                "Score": row.score,
-            }
-            for row in outputs
-        ]
-    )
-    st.dataframe(frame, use_container_width=True, hide_index=True)
-    st.caption(
-        "Finished serving weight is an input, not a measured yield. "
-        "Nutrient totals use purchase weight and a single retention fraction. "
-        "Pressing or drying does not create protein."
-    )
-    if not frame.empty:
-        chart_l, chart_r = st.columns(2)
-        with chart_l:
-            st.caption("Cost split per serving")
-            st.bar_chart(frame.set_index("Option")[["Ingredients (naira)", "Processing (naira)"]])
-        with chart_r:
-            st.caption("Estimated protein per serving (g)")
-            st.bar_chart(frame.set_index("Option")[["Protein (g)"]])
-
-    st.subheader("Why each option is eligible or excluded")
-    for row in outputs:
-        status = "Eligible" if row.feasible else "Excluded"
-        with st.expander(f"{status}: {row.name} · {row.cost_ngn:,.0f} naira · {row.protein_g:.1f} g protein"):
-            for reason in row.reasons:
-                st.write("- " + reason)
-            if row.score_breakdown:
-                st.caption("Weighted score parts for the TF-IDF hybrid. This is a heuristic, not a learned guarantee.")
-                st.json(dict(row.score_breakdown), expanded=False)
-            allergen_text = ", ".join(row.allergens) if row.allergens else "Not recorded. Do not assume this is safe."
-            st.write("Recorded allergen labels: " + allergen_text)
-            st.write("Source trace")
-            for src in row.sources:
-                st.caption(src)
+    with st.expander("Compare the recommendation methods"):
+        st.caption("Experimental model comparison, not evidence of taste or superiority.")
+        st.write("Cheapest feasible:", _option_label(comparison["cheapest_feasible_plant"], names))
+        st.write("Keyword preference:", _option_label(comparison["keyword_hybrid"], names))
+        st.write("TF-IDF preference:", _option_label(comparison["tfidf_hybrid"], names))
+        if comparison["methods_disagree"]:
+            st.warning("The text methods disagree. There is no validated winner.")
+        if comparison["abstained"]:
+            st.info("All methods abstain because no plant option meets the hard requirements.")
+        st.caption("Independent chef-reviewed evaluation is not complete. See Research methods.")
 
 with evidence:
     st.subheader("Evidence register")
@@ -397,10 +355,10 @@ with stress:
 with methodology:
     st.subheader("Methods and safeguards")
     st.write("1. A dish has candidate formulations. Each formulation lists purchased ingredient weights, sources, a retention assumption, processing cost, time, and finished weight.")
-    st.write("2. Hard filters run first: plant-only, total budget, minimum estimated protein, preparation time, and recorded allergens. Beef never becomes eligible.")
-    st.write("3. Feasible options get a provisional score: 45% cost margin, 25% estimated protein, 15% preparation time, and 15% text match. The text term is either keyword overlap or experimental TF-IDF.")
+    st.write("2. Hard filters run first: plant-only, total budget, minimum estimated protein, preparation time, and recorded allergens. If an allergen exclusion is selected, unknown labels make that option ineligible. Beef never becomes eligible.")
+    st.write("3. Eligible options receive a provisional score: 45% cost margin, 25% diminishing-returns protein utility, 15% preparation time, and 15% text match. The minimum protein target is still a hard filter; the protein utility is a preference, not nutritional adequacy. The text term uses keyword overlap or experimental TF-IDF.")
     st.write("4. The same constraints are scored both ways and compared with the cheapest plant option and the cheapest feasible plant option. A difference is a score difference, not a taste result.")
-    st.write("5. On the frozen synthetic cases, 'chewy smoky grilled' leads both text methods to pressed tofu instead of cheaper plain tofu. 'crispy fried' leads the keyword method to fried tofu, while TF-IDF still picks plain tofu. Weights were not changed to hide that disagreement.")
+    st.write("5. Model ranking versus cheapest feasible must be evaluated using independently reviewed restaurant cases before claiming any improvement.")
     st.write("6. Research mode stays closed until dated prices, food states, serving weights, and allergen review are entered. Moisture-adjusted nutrient notes are not treated as protein created by pressing.")
     st.caption("This demo does not collect personal information. Calculations use local CSV files.")
 

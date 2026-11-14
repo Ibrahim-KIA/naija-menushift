@@ -41,6 +41,7 @@ class Evaluation:
     score_breakdown: tuple[tuple[str, float], ...] = ()
     ingredient_cost_ngn: float = 0.0
     processing_cost_ngn: float = 0.0
+    allergen_review_complete: bool = False
     # purpose-specific traceability; the cost here includes all listed ingredients and explicit overheads
 
     def to_dict(self) -> dict:
@@ -57,8 +58,19 @@ class Dataset:
 
 
 def read_csv(path: str | Path) -> list[dict[str, str]]:
-    with Path(path).open(encoding="utf-8-sig", newline="") as handle:
-        return list(csv.DictReader(handle))
+    """Read a project CSV without silently losing malformed or duplicate columns."""
+    path = Path(path)
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = reader.fieldnames or []
+        if not headers or len(headers) != len(set(headers)) or any(not name for name in headers):
+            raise ValueError(f"{path.name}: missing or duplicate CSV headers")
+        rows = []
+        for line_number, row in enumerate(reader, start=2):
+            if None in row or any(value is None for value in row.values()):
+                raise ValueError(f"{path.name}: malformed CSV record at line {line_number}")
+            rows.append(row)
+        return rows
 
 
 def load_dataset(folder: str | Path, *, demo: bool) -> Dataset:
@@ -168,9 +180,14 @@ def _costs(data: Dataset, dish_id: str, price_shock: float) -> list[dict]:
         values = {"cost": 0.0, "protein": 0.0, "iron": 0.0, "zinc": 0.0}
         references = set()
         allergens: set[str] = set()
+        unreviewed_allergens: set[str] = set()
         for line in lines:
             ing = ingredient[line["ingredient_id"]]
-            allergens.update(a.strip().lower() for a in ing.get("allergens", "").split(";") if a.strip())
+            labels = {part.strip().lower() for part in ing.get("allergens", "").split(";") if part.strip()}
+            unclear = {"unknown", "verify label", "unreviewed", "not checked", "pending", "?"}
+            if not labels or (labels & unclear):
+                unreviewed_allergens.add(ing["ingredient_id"])
+            allergens.update(labels - unclear - {"none"})
             mass = _number(line, "purchase_g", op["option_id"], allow_zero=False)
             retain = _number(line, "nutrient_retention_fraction", op["option_id"])
             values["cost"] += mass * _number(ing, "price_ngn_per_kg", ing["ingredient_id"]) / 1000 * (1 + price_shock)
@@ -181,7 +198,7 @@ def _costs(data: Dataset, dish_id: str, price_shock: float) -> list[dict]:
         processing_cost = sum(_number(op, f, op["option_id"]) for f in ("energy_cost_ngn", "labour_cost_ngn", "other_cost_ngn"))
         values["cost"] += processing_cost
         numeric_health(values)
-        values.update(option=op, sources=tuple(sorted(references)), allergens=tuple(sorted(allergens)), ingredient_cost=ingredient_cost, processing_cost=processing_cost)
+        values.update(option=op, sources=tuple(sorted(references)), allergens=tuple(sorted(allergens)), unreviewed_allergens=tuple(sorted(unreviewed_allergens)), ingredient_cost=ingredient_cost, processing_cost=processing_cost)
         results.append(values)
     return results
 
@@ -207,6 +224,14 @@ def _lexical_scores(options: Sequence[dict[str, str]], preference: str) -> dict[
         overlap = len(query & _tokens(_option_text(option))) / len(query)
         scores[option["option_id"]] = overlap
     return scores
+
+
+def _protein_utility(protein_g: float, target_g: float) -> float:
+    """Bounded, monotonic preference for protein *after* enforcing the minimum target.
+
+    This is a ranking heuristic, not evidence of nutritional adequacy.
+    """
+    return protein_g / (protein_g + max(target_g, 1.0))
 
 
 def _semantic_scores(options: Sequence[dict[str, str]], preference: str) -> dict[str, float]:
@@ -262,7 +287,8 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
         enough = protein + 1e-7 >= protein_target_g
         timely = prep <= max_prep_minutes
         allergen_conflict = sorted({a.strip().lower() for a in avoid_allergens} & set(r["allergens"]))
-        feasible = plant and affordable and enough and timely and not allergen_conflict
+        unknown_allergen_status = bool(avoid_allergens) and bool(r["unreviewed_allergens"])
+        feasible = plant and affordable and enough and timely and not allergen_conflict and not unknown_allergen_status
         reasons = []
         if not plant:
             reasons.append("Beef/reference only; excluded from plant recommendations")
@@ -274,11 +300,13 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
             reasons.append("Exceeds preparation time limit")
         if allergen_conflict:
             reasons.append("Excluded labeled allergen(s): " + ", ".join(allergen_conflict))
+        if unknown_allergen_status:
+            reasons.append("Cannot verify requested allergen exclusion; ingredient label review is incomplete")
         breakdown: tuple[tuple[str, float], ...] = ()
         if feasible:
             # score = user-visible, explainable multi-criteria recommendation with text retrieval
             cost_score = max(0.0, 1 - cost / budget_ngn)
-            protein_score = min(1.0, protein / max(protein_target_g, 1.0))
+            protein_score = _protein_utility(protein, protein_target_g)
             time_score = max(0.0, 1 - prep / max_prep_minutes)
             similarity = semantic.get(op["option_id"], 0.0)
             breakdown = (("cost", round(0.45 * cost_score, 5)), ("protein", round(0.25 * protein_score, 5)), ("time", round(0.15 * time_score, 5)), ("text_match", round(0.15 * similarity, 5)))
@@ -298,6 +326,7 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
             feasible=feasible, score=round(score, 5) if score is not None else None,
             reasons=tuple(reasons), sources=r["sources"], demo=data.demo, allergens=r["allergens"],
             score_breakdown=breakdown, ingredient_cost_ngn=round(r["ingredient_cost"],2), processing_cost_ngn=round(r["processing_cost"],2),
+            allergen_review_complete=not bool(r["unreviewed_allergens"]),
         ))
     return sorted(output, key=lambda x: (not x.feasible, -(x.score or 0), x.cost_ngn, x.option_id))
 
