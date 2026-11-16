@@ -20,6 +20,18 @@ A reusable, evidence-aware decision-support tool for Nigerian restaurant teams e
 
 **Not yet done:** credible local price collection, verified nutrient inputs, measured cooking yields, taste/texture evaluation, food-safety review, multi-dish recipes, and assessment showing statistical or practical value beyond a transparent rule-based baseline. The TF-IDF component is an *experimental NLP similarity signal*, not a taste model or validation of AI performance.
 
+## Challenge 3 — Market Opportunity (separate research experiment)
+
+The repository also contains a separate Streamlit page at `pages/3_Market_Opportunity.py` for **Challenge 3: market segmentation and opportunity scoring** of tofu suya and Kafi soy yoghurt. Its 48 opportunity rows cover six Nigerian cities and four consumer segments.
+
+The supplied workbook currently has **no product-specific demand responses or scored markets**. The genuine model **abstains** until dated consumer/retailer/price evidence is entered. A synthetic demonstration shows deterministic weight-sensitivity scoring and exploratory K-means clusters but **is not a Nigerian market analysis**.
+
+- Data: `data/challenge3/opportunities.csv`, `data/challenge3/survey_responses.csv` (headers only)
+- Logic: `src/menushift/market3.py`, `src/menushift/market_segments.py`
+- Brief: `docs/CHALLENGE3_MARKET_BRIEF_2026-11-16.md`
+- Presentation script: `docs/CHALLENGE3_TEAM_SCRIPT_2026-11-16.md`
+- Neither a food product's market demand nor Kafi's recipe/food safety is validated.
+
 ## Quick start (Python 3.11+)
 
 ```bash
