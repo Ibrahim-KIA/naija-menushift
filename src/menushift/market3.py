@@ -50,7 +50,6 @@ REQUIRED_FIELDS = {
 }
 POSITIVE_FIELDS = {
     "Demand_Sample_Size", "Competitor_Price_NGN", "Proposed_Product_Price_NGN",
-    "Relevant_Retail_or_Foodservice_Count",
 }
 SCORE_FIELDS = set(WEIGHTS) | {"Competitor_Intensity_1to5"}
 CONFIDENCE = {"High", "Medium", "Low"}
@@ -114,6 +113,14 @@ def _positive_number(value: str) -> bool:
         return False
 
 
+def _valid_nonnegative_count(value: str) -> bool:
+    try:
+        number = float(value)
+        return math.isfinite(number) and number.is_integer() and number >= 0
+    except (ValueError, TypeError):
+        return False
+
+
 def _valid_score(value: str) -> bool:
     try:
         value = float(value)
@@ -130,6 +137,8 @@ def evidence_gaps(row: Mapping[str, str]) -> tuple[str, ...]:
             value = str(row.get(field, "") or "").strip()
             if not value:
                 gaps.append(field)
+            elif field == "Relevant_Retail_or_Foodservice_Count" and not _valid_nonnegative_count(value):
+                gaps.append(field + " [must be nonnegative integer]")
             elif field in SCORE_FIELDS and not _valid_score(value):
                 gaps.append(field + " [must be integer 1–5]")
             elif field in POSITIVE_FIELDS and not _positive_number(value):
