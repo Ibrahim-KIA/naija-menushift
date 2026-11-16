@@ -13,8 +13,8 @@ import streamlit as st
 
 from menushift.market3 import (
     WEIGHT_SCENARIOS,
-    evidence_coverage,
     evaluate_markets,
+    evidence_coverage,
     read_opportunities,
     synthetic_demonstration,
 )
