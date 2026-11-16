@@ -1,6 +1,6 @@
 # Naija MenuShift — agent instructions (Codex, Claude, GitHub Copilot)
 
-This repo is a research prototype for Hack the Fork Nigeria 2026 Challenge 2. Its product scope is **many Nigerian dishes**; **suya is only the first use case**. Never hardcode the architecture to tofu or suya.
+This repo contains distinct research prototypes for Hack the Fork Nigeria 2026: Challenge 2 (menu adaptation) and Challenge 3 (food market opportunity). Challenge 3 does not change the commercial target of the Challenge 2 software. Its product scope is **many Nigerian dishes**; **suya is only the first use case**. Never hardcode the architecture to tofu or suya.
 
 ## Invariants
 - `data/demo/` is SYNTHETIC. Do not describe demo numbers as real prices, measured nutrients, verified taste, or evidence of affordability.
@@ -10,6 +10,8 @@ This repo is a research prototype for Hack the Fork Nigeria 2026 Challenge 2. It
 - Avoid unsupported assertions about protein equivalence, cooking yield, texture, nutritional adequacy or local acceptance.
 - All substantive changes need unit tests and clear limitations. Keep the app usable with only local CSVs; no paid model APIs or secret keys required.
 - Keep personal contact information and credentials out of git.
+
+- **Challenge 3:** `data/challenge3/opportunities.csv` contains 48 sparse market candidates, not 48 sales observations. The survey is empty. Never infer a real market winner from soybean production or from the synthetic market/segmentation demos. Use consented survey responses only and cite product-specific interview and retail evidence.
 
 ## Workflows / skills
 - For research CSV changes, invoke `.agents/skills/menushift-data-evidence/SKILL.md`.
