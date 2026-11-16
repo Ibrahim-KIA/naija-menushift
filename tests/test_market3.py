@@ -5,9 +5,9 @@ import pytest
 
 from menushift.market3 import (
     WEIGHTS,
+    evaluate_markets,
     evidence_coverage,
     evidence_gaps,
-    evaluate_markets,
     read_opportunities,
     score_opportunity,
     synthetic_demonstration,
