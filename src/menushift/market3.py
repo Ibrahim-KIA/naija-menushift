@@ -9,10 +9,10 @@ from __future__ import annotations
 import csv
 import math
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Mapping
 
 WEIGHTS: dict[str, int] = {
     "Demand_Score_1to5": 30,
@@ -132,7 +132,7 @@ def _valid_score(value: str) -> bool:
 def evidence_gaps(row: Mapping[str, str]) -> tuple[str, ...]:
     """Missing / invalid evidence is abstention, not a score of zero."""
     gaps = []
-    for group, fields in REQUIRED_FIELDS.items():
+    for fields in REQUIRED_FIELDS.values():
         for field in fields:
             value = str(row.get(field, "") or "").strip()
             if not value:
@@ -216,11 +216,11 @@ def synthetic_demonstration(source_rows: list[dict[str, str]]) -> list[dict[str,
         "Ibadan": (3, 3, 3, 3, 4),
     }
     demo = []
-    for city in city_scores:
+    for city, base_values in city_scores.items():
         for product in ("Tofu suya", "Kafi soy yoghurt"):
             source = by_city_product[(city, product)]
             row = dict(source)
-            vals = city_scores[city]
+            vals = base_values
             if product == "Kafi soy yoghurt":
                 vals = (vals[0], vals[1], min(5, vals[2] + 1), max(1, vals[3] - 1), vals[4])
             row.update({k: str(v) for k, v in zip(WEIGHTS, vals)})
