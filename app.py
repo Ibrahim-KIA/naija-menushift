@@ -67,6 +67,8 @@ def _apply(updates: dict) -> None:
 
 st.caption("HACK THE FORK NIGERIA 2026 · CHALLENGE 2")
 st.title("Naija MenuShift")
+st.page_link("pages/1_Kitchen_Intelligence.py", label="Explore the Kitchen Intelligence Studio", icon="🌿")
+st.caption("New: ingredient-aware formulation exploration and equipment-constrained alternatives.")
 st.write("Compare awara preparations for suya using the workbook and the later 2026 NBS averages.")
 st.warning(
     "Prices and per-100 g nutrients come from those sources. Finished weight, soy yield, "
