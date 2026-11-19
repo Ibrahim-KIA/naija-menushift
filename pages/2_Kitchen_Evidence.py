@@ -81,9 +81,9 @@ with st.expander("Ingredient-package photo evidence (manual review only)"):
                 "Verify both the ingredient list and allergen/cross-contact statement."
             )
 
-if st.button("Validate four evidence tables", type="primary"):
+if st.button("Validate five evidence tables", type="primary"):
     if len(files) != len(HEADER_GROUPS):
-        st.error("Supply all four CSVs, even when a table contains only headers.")
+        st.error("Supply all five CSVs, even when a table contains only headers.")
     else:
         try:
             parts = {
@@ -97,6 +97,10 @@ if st.button("Validate four evidence tables", type="primary"):
             a.metric("Reviewed packages", sum(r["review_status"] == "reviewed" for r in bundle.packages))
             b.metric("Reviewed sensory submissions", sum(r["review_status"] == "reviewed" for r in bundle.sensory))
             c.metric("Approved linked servings", len(bundle.approved_servings))
+            st.metric(
+                "Reviewed chef/restaurant feedback",
+                sum(r["review_status"] == "reviewed" for r in bundle.chef_feedback),
+            )
             st.caption(
                 "Only actual measured servings with linked reviewed labels, "
                 "batch records, and sensory observations can appear as approved."
