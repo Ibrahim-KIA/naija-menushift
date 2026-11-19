@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from menushift.kitchen_optimizer import EQUIPMENT_REQUIREMENTS, explore
+from menushift.kitchen_optimizer import explore
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "data" / "sources"
@@ -216,20 +216,19 @@ else:
         candidate = search.best(objective)
         if candidate is None:
             continue
-        with col:
-            with st.container(border=True):
-                st.markdown(f'<div class="ms-card-intro">{heading}</div>', unsafe_allow_html=True)
-                st.markdown(
-                    f'<div class="ms-card-name">{candidate.method}</div>',
-                    unsafe_allow_html=True,
-                )
-                st.caption(description)
-                st.metric("Estimated cost", f"₦{candidate.evaluation.cost_ngn:,.0f}")
-                st.write(
-                    f"**{candidate.portion_g:.0f} g** finished assumption · "
-                    f"**{candidate.evaluation.protein_g:.1f} g** estimated protein"
-                )
-                st.caption("Unvalidated serving and preparation assumptions")
+        with col, st.container(border=True):
+            st.markdown(f'<div class="ms-card-intro">{heading}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="ms-card-name">{candidate.method}</div>',
+                unsafe_allow_html=True,
+            )
+            st.caption(description)
+            st.metric("Estimated cost", f"₦{candidate.evaluation.cost_ngn:,.0f}")
+            st.write(
+                f"**{candidate.portion_g:.0f} g** finished assumption · "
+                f"**{candidate.evaluation.protein_g:.1f} g** estimated protein"
+            )
+            st.caption("Unvalidated serving and preparation assumptions")
 
     st.markdown('<div class="ms-section">04 · Understand the recommendation</div>', unsafe_allow_html=True)
     st.subheader("Inspect a formulation")
