@@ -6,8 +6,14 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from menushift.bedrock_image import (
+    TITAN_IMAGE_MODEL_ID,
+    TitanImageGenerator,
+    workshop_generation_enabled,
+)
 from menushift.kitchen_optimizer import INVENTORY_ITEMS, explore
 from menushift.recipe_trial import build_trial
+from menushift.visual_preview import STYLES, build_preview_draft
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "data" / "sources"
@@ -332,6 +338,83 @@ else:
                 "exact finished food state; production yields are unmeasured."
             )
         trial = build_trial(selected)
+        st.markdown("#### AI dish visual preview")
+        st.caption(
+            "An optional *concept illustration*, not a photograph or prediction "
+            "of the cooked dish. The chosen recipe remains authoritative."
+        )
+        visual_style = st.selectbox(
+            "How should we present the dish?",
+            options=list(STYLES),
+            index=1,
+            key="preview_style",
+        )
+        visual_request = st.text_input(
+            "Describe the look you want (optional)",
+            placeholder="e.g. overhead on a white plate",
+            max_chars=250,
+            key="preview_request",
+            help="Currently interprets approved plating and camera cues. "
+                 "Ingredient changes must go through recipe validation.",
+        )
+        draft = build_preview_draft(
+            selected, style=visual_style, restaurant_request=visual_request
+        )
+        st.caption(
+            "Visual cues interpreted: "
+            + (", ".join(draft.interpreted_preferences) or
+               "default presentation only")
+        )
+        with st.expander("Inspect or copy the recipe-grounded image prompt"):
+            st.code(draft.prompt, language=None)
+            st.caption("Excluded visual elements: " + draft.negative_prompt)
+            st.download_button(
+                "Download image prompt",
+                data=draft.prompt + "\\n",
+                file_name="naija-menushift-visual-prompt.txt",
+                mime="text/plain",
+                use_container_width=True,
+            )
+        if workshop_generation_enabled():
+            if st.button(
+                "Generate one AI dish concept image", type="secondary",
+                use_container_width=True,
+                help="One explicit model invocation; workshop model approval required.",
+            ):
+                try:
+                    generator = TitanImageGenerator(
+                        model_id=TITAN_IMAGE_MODEL_ID, approved=True
+                    )
+                    generated = generator.generate(draft)
+                    st.session_state["preview_result"] = {
+                        "key": draft.fingerprint,
+                        "bytes": generated.content,
+                        "mime": generated.mime_type,
+                    }
+                except Exception:  # noqa: BLE001  — external SDK errors vary by provider
+                    st.error(
+                        "Image generation failed or access was denied. "
+                        "The recipe and prompt remain available."
+                    )
+            preview_result = st.session_state.get("preview_result")
+            if preview_result and preview_result["key"] == draft.fingerprint:
+                st.image(
+                    preview_result["bytes"],
+                    caption=draft.label,
+                    use_container_width=True,
+                )
+                st.download_button(
+                    "Download illustrative image",
+                    data=preview_result["bytes"],
+                    file_name="naija-menushift-concept.png",
+                    mime=preview_result["mime"],
+                )
+        else:
+            st.info(
+                "Image creation is not enabled for this event account. "
+                "The official model allowlist does not include Titan Image Generator. "
+                "The approved-model prompt is ready if organisers authorise access."
+            )
         st.markdown("#### " + trial.cookbook_title)
         st.caption(
             "Cookbook-style research recipe • 1 assumed serving • "
