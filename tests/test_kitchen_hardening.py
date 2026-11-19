@@ -93,11 +93,12 @@ def test_trial_card_has_explicit_limits_and_source_references():
     assert candidate is not None
     trial = build_trial(candidate)
     report = trial.to_markdown(candidate)
-    assert "NOT CERTIFIED" in report
-    assert "Unmeasured processing costs" in report
-    assert "Source" not in report or "Price:" in report
-    assert "## Experimental preparation protocol" in report
-    assert "## Measurements" in report
+    assert "Not approved for food service" in report
+    assert "## Ingredients" in report
+    assert "## At a glance" in report
+    assert "  - Price:" in report
+    assert "## Method — numbered kitchen trial" in report
+    assert "## Measurements needed for a real recipe" in report
 
 
 def test_no_trial_card_for_ineligible_formulation():
