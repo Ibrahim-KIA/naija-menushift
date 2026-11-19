@@ -66,6 +66,12 @@ def test_optional_spice_stock_filters_only_selected_recipe_lines():
     assert not result.eligible
 
 
+def test_peanut_exclusion_abstains_even_if_yaji_not_modelled():
+    result = _plan(avoid_allergens=("peanut",))
+    assert not result.eligible
+    assert result.skipped_unverified_yaji > 0
+
+
 def test_unknown_inventory_rejected_without_silent_default():
     with pytest.raises(ValueError, match="Unknown inventory"):
         _plan(available_ingredients=frozenset({"random-food"}))
