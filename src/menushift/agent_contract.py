@@ -71,7 +71,7 @@ class AgentDecision:
 class AgentRun:
     decisions: tuple[AgentDecision, ...]
     rounds: int
-    model_invoked: bool
+    planner_invoked: bool  # not evidence that an AWS or learned model was used
 
     @property
     def accepted(self) -> tuple[RecipeCandidate, ...]:
@@ -204,7 +204,7 @@ def run_agent(
                 feedback.append(f"{decision.proposal_id}: {decision.reason}")
         if len([d for d in decisions if d.accepted]) >= 3 or not feedback:
             break
-    return AgentRun(tuple(decisions), rounds=rounds, model_invoked=True)
+    return AgentRun(tuple(decisions), rounds=rounds, planner_invoked=True)
 
 
 def allowed_proposal_schema() -> dict[str, Any]:
