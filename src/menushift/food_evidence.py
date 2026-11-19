@@ -25,6 +25,13 @@ ALLERGENS = {
     "tree nut", "fish", "shellfish", "mustard", "celery", "lupin",
 }
 RATINGS = ("aroma", "flavour", "texture", "appearance", "overall")
+FOOD_STATE_FOR_METHOD = {
+    "awara_firm": "unpressed_grilled",
+    "awara_pressed": "pressed_grilled",
+    "awara_frozen": "frozen_thawed_grilled",
+    "awara_fried": "fried_grilled",
+}
+
 
 PACKAGE_HEADERS = (
     "package_id", "ingredient_id", "brand", "product_name", "batch_lot",
@@ -270,10 +277,8 @@ def validate_serving(row: dict[str, str]) -> None:
         raise ValueError("Protein evidence must state laboratory assay or matched reference")
     if not row["protein_source"].startswith(("https://", "http://", "lab-report:")):
         raise ValueError("Protein source requires a retrievable reference or lab record ID")
-    if row["serving_food_state"] not in {
-        "unpressed_grilled", "pressed_grilled", "frozen_thawed_grilled", "fried_grilled",
-    }:
-        raise ValueError("Food state must describe a finished portion")
+    if row["serving_food_state"] != FOOD_STATE_FOR_METHOD[row["method_id"]]:
+        raise ValueError("Serving food state must match its tested preparation method")
 
 
 def audit_evidence(bundle: FieldEvidence) -> None:
@@ -321,6 +326,10 @@ def audit_evidence(bundle: FieldEvidence) -> None:
             raise ValueError("Serving package evidence references are required")
         if any(pid not in packages or packages[pid]["review_status"] != "reviewed" for pid in referenced):
             raise ValueError("Serving package labels must be independently reviewed")
+        if any(packages[pid]["cross_contact_review"] != "assessed" for pid in referenced):
+            raise ValueError("Serving cannot be approved with unreviewed cross-contact status")
+        if float(row["protein_g"]) > float(batch["finished_serving_g"]):
+            raise ValueError("Serving protein cannot exceed measured finished serving mass")
         kinds = {packages[pid]["ingredient_id"] for pid in referenced}
         if not kinds & {"wet_awara", "fried_awara"} or "yaji" not in kinds:
             raise ValueError("Suya serving requires reviewed awara and yaji package/recipe records")
