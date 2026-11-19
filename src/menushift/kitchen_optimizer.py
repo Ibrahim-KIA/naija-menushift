@@ -29,13 +29,31 @@ METHOD_LABELS = {
     "awara_fried": "Fried awara",
 }
 PREFERRED_OBJECTIVES = ("budget", "protein", "kitchen", "balanced")
+INVENTORY_ITEMS = {
+    "awara": "Fresh awara / tofu",
+    "onion": "Onions",
+    "pepper": "Fresh pepper",
+    "salt": "Salt",
+    "seasoning": "Seasoning (label review outstanding)",
+    "oil": "Vegetable oil",
+}
+SOURCE_TO_INVENTORY = {
+    "wet_awara": "awara", "fried_awara": "awara",
+    "onion": "onion", "pepper": "pepper", "salt": "salt", "seasoning": "seasoning",
+}
+
 
 
 @dataclass(frozen=True)
 class IngredientLine:
+    ingredient_id: str
     name: str
     purchase_g: float
+    estimated_cost_ngn: float
+    estimated_protein_g: float
     source: str
+    nutrition_source: str
+    nutrition_state: str
     allergen_labels: str
 
 
@@ -47,6 +65,8 @@ class RecipeCandidate:
     evaluation: Evaluation
     ingredient_lines: tuple[IngredientLine, ...]
     required_equipment: frozenset[str]
+    required_inventory: frozenset[str]
+    oil_cl: float = 0.0
 
     @property
     def eligible(self) -> bool:
@@ -57,6 +77,7 @@ class RecipeCandidate:
 class Exploration:
     candidates: tuple[RecipeCandidate, ...]
     skipped_equipment: int
+    skipped_ingredients: int
     inspected: int
 
     @property
@@ -108,6 +129,7 @@ def explore(
     protein_target_g: float,
     max_prep_minutes: float,
     equipment: frozenset[str],
+    available_ingredients: frozenset[str] | None = None,
     portions_g: tuple[int, ...] = (80, 100, 120, 140, 160, 180, 200),
     preference: str = "",
     avoid_allergens: tuple[str, ...] = (),
@@ -148,9 +170,14 @@ def explore(
     allowed = set().union(*EQUIPMENT_REQUIREMENTS.values())
     if not set(equipment) <= allowed:
         raise ValueError("Unsupported kitchen equipment")
+    if available_ingredients is not None:
+        unknown = set(available_ingredients) - set(INVENTORY_ITEMS)
+        if unknown:
+            raise ValueError(f"Unknown inventory item(s): {', '.join(sorted(unknown))}")
 
     found: list[RecipeCandidate] = []
     skipped = 0
+    skipped_ingredients = 0
     inspected = 0
     for portion in sorted(portions_g):
         data = build_sourced_menu(
@@ -166,9 +193,20 @@ def explore(
             ingredient = ingredients[line["ingredient_id"]]
             recipe_items.setdefault(line["option_id"], []).append(
                 IngredientLine(
+                    ingredient_id=ingredient["ingredient_id"],
                     name=ingredient["name"],
                     purchase_g=round(float(line["purchase_g"]), 2),
+                    estimated_cost_ngn=round(
+                        float(line["purchase_g"]) * float(ingredient["price_ngn_per_kg"])
+                        / 1000 * (1 + price_shock), 2
+                    ),
+                    estimated_protein_g=round(
+                        float(line["purchase_g"]) * float(ingredient["protein_g_per_100g"])
+                        / 100 * float(line["nutrient_retention_fraction"]), 2
+                    ),
                     source=ingredient["price_source"],
+                    nutrition_source=ingredient["nutrition_source"],
+                    nutrition_state=ingredient["nutrition_state"],
                     allergen_labels=ingredient.get("allergens", ""),
                 )
             )
@@ -185,6 +223,15 @@ def explore(
             if not requirement.issubset(equipment):
                 skipped += 1
                 continue
+            required_inventory = {
+                SOURCE_TO_INVENTORY[line.ingredient_id]
+                for line in recipe_items.get(result.option_id, [])
+            }
+            if result.option_id == "awara_fried":
+                required_inventory.add("oil")
+            if available_ingredients is not None and not required_inventory.issubset(available_ingredients):
+                skipped_ingredients += 1
+                continue
             found.append(RecipeCandidate(
                 identifier=f"{result.option_id}@{portion}g",
                 method=METHOD_LABELS[result.option_id],
@@ -192,5 +239,10 @@ def explore(
                 evaluation=result,
                 ingredient_lines=tuple(recipe_items.get(result.option_id, [])),
                 required_equipment=requirement,
+                required_inventory=frozenset(required_inventory),
+                oil_cl=oil_cl if result.option_id == "awara_fried" else 0.0,
             ))
-    return Exploration(candidates=tuple(found), skipped_equipment=skipped, inspected=inspected)
+    return Exploration(
+        candidates=tuple(found), skipped_equipment=skipped,
+        skipped_ingredients=skipped_ingredients, inspected=inspected,
+    )
