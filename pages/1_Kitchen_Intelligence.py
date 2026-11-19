@@ -225,6 +225,12 @@ if search.skipped_equipment:
     st.caption(f"{search.skipped_equipment} configurations excluded for unavailable equipment.")
 if search.skipped_ingredients:
     st.caption(f"{search.skipped_ingredients} configurations excluded for unavailable ingredients.")
+if search.skipped_unverified_yaji:
+    st.warning(
+        "Peanut exclusion selected: traditional suya yaji often contains groundnut, "
+        "and a reviewed peanut-free yaji formulation is not yet in this dataset. "
+        "No suya-style recommendation can be certified for this restriction."
+    )
 st.caption(
     "Eligibility is against *listed* costs, approximate nutrients and assumed durations; "
     "it does not guarantee affordability when unmeasured overheads are added."
