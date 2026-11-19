@@ -60,8 +60,8 @@ class RecipeTrial:
                 "(model input; oil absorption unmeasured)"
             )
         lines.extend([
-            "- **Yaji / suya spice mix:** Not specified by the verified dataset; obtain a "
-            "reviewed, weighed formulation before any actual serving.",
+            ("- **Yaji / suya spice mix:** Not specified by the verified dataset; obtain a "
+             "reviewed, weighed formulation before any actual serving."),
             "",
             "## Method — numbered kitchen trial",
         ])
@@ -72,19 +72,19 @@ class RecipeTrial:
             "## Practical checks before tasting or serving",
             "- Record weighed raw, processed and final portions, cooking duration, oil uptake and fuel.",
             "- Confirm soy and peanut/yaji allergens, packaged seasoning labels and shared equipment.",
-            "- Use the food specialist's approved handling and cooking procedure; no invented "
-            "temperature, storage or safety guarantees appear in this card.",
+            ("- Use the food specialist's approved handling and cooking procedure; no invented "
+             "temperature, storage or safety guarantees appear in this card."),
             "",
             "## Price and nutrition evidence",
         ])
         for ingredient in candidate.ingredient_lines:
             lines.extend([
-                f"- **{ingredient.name}** — estimated ₦{ingredient.estimated_cost_ngn:.2f} "
-                f"for {ingredient.purchase_g:.1f} g; "
-                f"~{ingredient.estimated_protein_g:.2f} g modelled protein",
+                (f"- **{ingredient.name}** — estimated ₦{ingredient.estimated_cost_ngn:.2f} "
+                 f"for {ingredient.purchase_g:.1f} g; "
+                 f"~{ingredient.estimated_protein_g:.2f} g modelled protein"),
                 f"  - Price: {ingredient.source}",
-                f"  - Nutrition: {ingredient.nutrition_source} "
-                f"({ingredient.nutrition_state}); label: {ingredient.allergen_labels or 'unreviewed'}",
+                (f"  - Nutrition: {ingredient.nutrition_source} "
+                 f"({ingredient.nutrition_state}); label: {ingredient.allergen_labels or 'unreviewed'}"),
             ])
         lines.extend([
             "",
