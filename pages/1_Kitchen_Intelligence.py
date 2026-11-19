@@ -12,6 +12,7 @@ from menushift.bedrock_image import (
     TitanImageGenerator,
     workshop_generation_enabled,
 )
+from menushift.food_evidence import load_field_evidence, serving_snapshot
 from menushift.kitchen_optimizer import INVENTORY_ITEMS, explore
 from menushift.recipe_trial import build_trial
 from menushift.visual_intent import BedrockVisualInterpreter, visual_interpretation_enabled
@@ -19,6 +20,7 @@ from menushift.visual_preview import STYLES, build_preview_draft
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "data" / "sources"
+EVIDENCE = ROOT / "data" / "evidence_intake"
 
 st.set_page_config(
     page_title="Kitchen Intelligence | Naija MenuShift",
@@ -499,6 +501,28 @@ else:
         with st.expander("What must be measured before serving?"):
             for gap in trial.evidence_gaps:
                 st.write("- " + gap)
+        with st.expander("Independent serving evidence (only when human-approved)"):
+            try:
+                evidence = load_field_evidence(EVIDENCE)
+                observed = [
+                    row for row in serving_snapshot(evidence)
+                    if row["method_id"] == selected.evaluation.option_id
+                ]
+                if observed:
+                    st.dataframe(pd.DataFrame(observed), hide_index=True)
+                    st.caption(
+                        "Measured-batch observations are displayed separately from "
+                        "the experimental optimisation values. A reviewed sensory "
+                        "panel is not proof of population-wide taste preference."
+                    )
+                else:
+                    st.info(
+                        "No matching independently approved serving records yet. "
+                        "Amina's published food references and price leads are "
+                        "not measurements of this finished recipe."
+                    )
+            except (OSError, ValueError) as exc:
+                st.error(f"Evidence registry requires correction: {exc}")
     st.subheader("Trade-offs across eligible formulations")
     chart = pd.DataFrame([
         {
