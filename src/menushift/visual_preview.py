@@ -36,6 +36,23 @@ CAMERA_CUES = {
     "close up": "close-up photograph",
     "side view": "side-angle photograph",
 }
+LIGHTING_CUES = {
+    "sunset": "warm evening light",
+    "golden hour": "warm evening light",
+    "evening": "warm evening light",
+    "studio lighting": "clean studio light",
+    "bright studio": "clean studio light",
+    "daylight": "soft natural window light",
+}
+SETTING_CUES = {
+    "roadside": "casual Nigerian street-food setting",
+    "street stall": "casual Nigerian street-food setting",
+    "outdoor food stand": "casual Nigerian street-food setting",
+    "home kitchen": "simple home kitchen tabletop",
+    "fine dining": "elegant restaurant tabletop",
+    "minimal background": "neutral uncluttered background",
+}
+
 
 LABEL = "AI-generated illustrative concept — actual cooked appearance may differ."
 
@@ -82,8 +99,8 @@ def build_preview_draft(
     method = candidate.evaluation.option_id
     if method not in METHODS or style not in STYLES:
         raise ValueError("Unknown preparation method or visual presentation style")
-    if not isinstance(restaurant_request, str) or len(restaurant_request) > 250:
-        raise ValueError("Visual preference request must be at most 250 characters")
+    if not isinstance(restaurant_request, str) or len(restaurant_request) > 600:
+        raise ValueError("Visual preference request must be at most 600 characters")
 
     request = restaurant_request.casefold()
     presentation = STYLES[style]
@@ -102,6 +119,16 @@ def build_preview_draft(
 
     lighting = "soft natural window light"
     setting = "neutral uncluttered background"
+    for phrase, mapped in LIGHTING_CUES.items():
+        if phrase in request:
+            lighting = mapped
+            interpreted.append(phrase)
+            break
+    for phrase, mapped in SETTING_CUES.items():
+        if phrase in request:
+            setting = mapped
+            interpreted.append(phrase)
+            break
     if visual_intent is not None:
         if visual_intent.requires_recipe_change:
             raise ValueError(
