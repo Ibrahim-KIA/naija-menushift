@@ -26,7 +26,7 @@ METHOD_LABELS = {
     "awara_firm": "Firm awara",
     "awara_pressed": "Pressed awara",
     "awara_frozen": "Frozen–thawed awara",
-    "awara_fried": "Pressed/fried awara",
+    "awara_fried": "Fried awara",
 }
 PREFERRED_OBJECTIVES = ("budget", "protein", "kitchen", "balanced")
 
