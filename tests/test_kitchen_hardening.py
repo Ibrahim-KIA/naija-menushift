@@ -14,21 +14,17 @@ from menushift.bedrock_adapter import BedrockPlanner
 from menushift.kitchen_optimizer import INVENTORY_ITEMS, explore
 from menushift.recipe_trial import build_trial
 
-
 SOURCES = Path(__file__).resolve().parents[1] / "data" / "sources"
 EQUIPMENT = frozenset({"grill", "press", "freezer", "frying_pan"})
 
 
 def _plan(**kwargs):
-    params = dict(
-        budget_ngn=3000.0,
-        protein_target_g=10.0,
-        max_prep_minutes=240.0,
-        equipment=EQUIPMENT,
-        available_ingredients=frozenset(INVENTORY_ITEMS),
-        portions_g=(100, 140),
-        oil_cl=1.0,
-    )
+    params = {
+        "budget_ngn": 3000.0, "protein_target_g": 10.0,
+        "max_prep_minutes": 240.0, "equipment": EQUIPMENT,
+        "available_ingredients": frozenset(INVENTORY_ITEMS),
+        "portions_g": (100, 140), "oil_cl": 1.0,
+    }
     params.update(kwargs)
     return explore(SOURCES, **params)
 
@@ -44,10 +40,10 @@ def _proposal(method="awara_firm", portion=140, **kwargs):
 
 
 def _brief(**kwargs):
-    params = dict(
-        budget_ngn=3000.0, min_protein_g=10.0, max_prep_minutes=240.0,
-        equipment=EQUIPMENT, available_ingredients=frozenset(INVENTORY_ITEMS),
-    )
+    params = {
+        "budget_ngn": 3000.0, "min_protein_g": 10.0, "max_prep_minutes": 240.0,
+        "equipment": EQUIPMENT, "available_ingredients": frozenset(INVENTORY_ITEMS),
+    }
     params.update(kwargs)
     return KitchenBrief(**params)
 
