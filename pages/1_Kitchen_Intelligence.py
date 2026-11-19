@@ -391,7 +391,7 @@ else:
                         "bytes": generated.content,
                         "mime": generated.mime_type,
                     }
-                except Exception:
+                except Exception:  # noqa: BLE001  — external SDK errors vary by provider
                     st.error(
                         "Image generation failed or access was denied. "
                         "The recipe and prompt remain available."
