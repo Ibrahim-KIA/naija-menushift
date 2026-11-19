@@ -1,0 +1,7 @@
+item,city_or_scope,listed_price_ngn,unit,observed_date_or_period,source_url,availability,quality_status,limitation
+Fresh beef,Abuja Kubwa,8500,1 kg,2026-09-08,https://www.foodstuffmarkets.com/prices,unknown,retailer_aggregator_lead,Not necessarily boneless; not a direct November 19 quote
+Fresh beef,Abuja,8550,1 kg,undated listing accessed 2026-11-19,https://abujawholesaleprices.com/wholesale-meat-fish-abuja/,unknown,online_retail_lead,Unknown cut and direct seller verification; not a national price
+Peppered awara prepared food,Zaria,2000,1 pack,2026-11-01,https://www.restaurants10.com/NG/Zaria/368295613030485/A-%26-B-Square,posted_offer,local_menu_lead,Prepared meal not raw tofu; pack mass unknown; do not convert to price per kg
+Fresh tofu,Lagos,2700,1 unspecified listing,accessed 2026-11-19,https://www.supermart.ng/products/fresh-tofu,sold_out,online_retail_lead,Package weight not stated; not a purchasable current quote
+Tofu,Lagos,4500,1 unspecified listing,accessed 2026-11-19,https://www.asiangroceryng.com/shop/tofu,out_of_stock,online_retail_lead,Package weight not shown; imported product may not resemble local awara
+Raw boneless beef,Nigeria national average,7171.41,1 kg,2026-05,https://microdata.nigerianstat.gov.ng/index.php/catalog/162/related-materials,statistical_observation,national_benchmark,Not local spot price and not cooked suya yield
