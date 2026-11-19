@@ -104,8 +104,9 @@ st.selectbox(
 )
 st.caption("Starting with one properly tested dish. More meals can be added through the existing recipe schema.")
 
-with st.form("kitchen_brief"):
+with st.container(border=True):
     st.markdown("### 02 · Your constraints")
+    st.caption("Live simulation — results update when you change a requirement.")
     b, p, t = st.columns(3)
     budget = b.number_input(
         "Maximum estimated cost per serving (₦)",
@@ -166,7 +167,6 @@ with st.form("kitchen_brief"):
         pressed_t = c.number_input("Pressed minutes (assumed)", min_value=1, max_value=600, value=48)
         frozen_t = d.number_input("Freeze/thaw minutes (assumed)", min_value=1, max_value=1440, value=110)
         fried_t = e.number_input("Fried minutes (assumed)", min_value=1, max_value=600, value=65)
-    st.form_submit_button("Explore feasible formulations", type="primary", use_container_width=True)
 
 # Streamlit controls are rerunnable; one bounded, deterministic analysis per brief.
 try:
