@@ -93,7 +93,7 @@ class RecipeTrial:
         lines.extend(f"- {gap}" for gap in self.evidence_gaps)
         lines.extend(["", "## Limitations"])
         lines.extend(f"- {note}" for note in self.notes)
-        return "\\n".join(lines) + "\\n"
+        return "\n".join(lines) + "\n"
 
 
 METHOD_PROCEDURES = {
