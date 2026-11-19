@@ -11,7 +11,6 @@ from typing import Any
 
 from .agent_contract import KitchenBrief, allowed_proposal_schema
 
-
 SYSTEM_PROMPT = (
     "You are a bounded formulation-proposal planner for a Nigerian food research prototype. "
     "Return ONLY one JSON object with key 'proposals' following the schema given by the user. "
