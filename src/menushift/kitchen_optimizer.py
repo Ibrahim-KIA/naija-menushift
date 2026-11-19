@@ -78,6 +78,7 @@ class Exploration:
     candidates: tuple[RecipeCandidate, ...]
     skipped_equipment: int
     skipped_ingredients: int
+    skipped_unverified_yaji: int
     inspected: int
 
     @property
@@ -178,6 +179,7 @@ def explore(
     found: list[RecipeCandidate] = []
     skipped = 0
     skipped_ingredients = 0
+    skipped_unverified_yaji = 0
     inspected = 0
     for portion in sorted(portions_g):
         data = build_sourced_menu(
@@ -232,6 +234,12 @@ def explore(
             if available_ingredients is not None and not required_inventory.issubset(available_ingredients):
                 skipped_ingredients += 1
                 continue
+            # Standard Nigerian suya yaji frequently contains groundnut/peanut,
+            # but this dataset lacks a verified yaji ingredient and label.
+            # A "peanut-free suya" recommendation cannot be established.
+            if "peanut" in {a.lower() for a in avoid_allergens}:
+                skipped_unverified_yaji += 1
+                continue
             found.append(RecipeCandidate(
                 identifier=f"{result.option_id}@{portion}g",
                 method=METHOD_LABELS[result.option_id],
@@ -244,5 +252,6 @@ def explore(
             ))
     return Exploration(
         candidates=tuple(found), skipped_equipment=skipped,
-        skipped_ingredients=skipped_ingredients, inspected=inspected,
+        skipped_ingredients=skipped_ingredients,
+        skipped_unverified_yaji=skipped_unverified_yaji, inspected=inspected,
     )
