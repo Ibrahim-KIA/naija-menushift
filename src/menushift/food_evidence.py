@@ -346,7 +346,7 @@ def load_field_evidence(folder: str | Path) -> FieldEvidence:
     """A missing or empty table stays empty; it never becomes fabricated approved data."""
     path = Path(folder)
     groups = {}
-    for name, headers in HEADER_GROUPS.items():
+    for name in HEADER_GROUPS:
         candidate = path / f"{name}.csv"
         if not candidate.exists():
             raise ValueError(f"Missing evidence intake table {candidate.name}")
