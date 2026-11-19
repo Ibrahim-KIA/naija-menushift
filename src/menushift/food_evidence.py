@@ -44,6 +44,12 @@ SENSORY_HEADERS = (
     "aroma", "flavour", "texture", "appearance", "overall",
     "skewer_stability", "allergen_briefing", "reviewed_by", "review_status",
 )
+CHEF_HEADERS = (
+    "feedback_id", "batch_id", "method_id", "reviewer_code",
+    "reviewer_role", "review_date", "consent_confirmed",
+    "prep_practicality", "skewer_workability", "customer_fit",
+    "observations", "reviewed_by", "review_status",
+)
 SERVING_HEADERS = (
     "serving_id", "batch_id", "method_id", "package_ids",
     "protein_g", "protein_evidence_type", "protein_source",
@@ -51,7 +57,8 @@ SERVING_HEADERS = (
 )
 HEADER_GROUPS = {
     "packages": PACKAGE_HEADERS, "batches": BATCH_HEADERS,
-    "sensory": SENSORY_HEADERS, "servings": SERVING_HEADERS,
+    "sensory": SENSORY_HEADERS, "chef_feedback": CHEF_HEADERS,
+    "servings": SERVING_HEADERS,
 }
 
 
@@ -60,6 +67,7 @@ class FieldEvidence:
     packages: tuple[dict[str, str], ...]
     batches: tuple[dict[str, str], ...]
     sensory: tuple[dict[str, str], ...]
+    chef_feedback: tuple[dict[str, str], ...]
     servings: tuple[dict[str, str], ...]
 
     @property
@@ -223,6 +231,28 @@ def validate_sensory(row: dict[str, str]) -> None:
         raise ValueError("Unrecognised skewer stability observation")
 
 
+def validate_chef_feedback(row: dict[str, str]) -> None:
+    if set(row) != set(CHEF_HEADERS):
+        raise ValueError("Chef feedback schema mismatch")
+    _required(row, "feedback_id", "batch_id", "method_id", "review_status")
+    if row["method_id"] not in EQUIPMENT_REQUIREMENTS:
+        raise ValueError("Unknown chef evaluation method")
+    if row["review_status"] not in {"pending", "reviewed", "rejected"}:
+        raise ValueError("Unknown chef feedback review status")
+    if row["review_status"] != "reviewed":
+        return
+    _required(row, *CHEF_HEADERS[3:-1])
+    _date(row["review_date"], "chef feedback date")
+    if row["consent_confirmed"] != "yes":
+        raise ValueError("Chef feedback consent is required")
+    if row["reviewer_role"] not in {"chef", "restaurant_owner", "food_technologist"}:
+        raise ValueError("Chef reviewer role not recognised")
+    for field in ("prep_practicality", "skewer_workability", "customer_fit"):
+        val = _number(row[field], field, zero=False, maximum=5)
+        if val != int(val):
+            raise ValueError(f"{field} must be an integer from 1 to 5")
+
+
 def validate_serving(row: dict[str, str]) -> None:
     if set(row) != set(SERVING_HEADERS):
         raise ValueError("Serving schema mismatch")
@@ -252,6 +282,7 @@ def audit_evidence(bundle: FieldEvidence) -> None:
         ("packages", bundle.packages, validate_package, "package_id"),
         ("batches", bundle.batches, validate_batch, "batch_id"),
         ("sensory", bundle.sensory, validate_sensory, "trial_id"),
+        ("chef_feedback", bundle.chef_feedback, validate_chef_feedback, "feedback_id"),
         ("servings", bundle.servings, validate_serving, "serving_id"),
     )
     for name, records, validator, identifier in groups:
@@ -271,6 +302,12 @@ def audit_evidence(bundle: FieldEvidence) -> None:
         parent = batches.get(row["batch_id"])
         if parent is None or parent["method_id"] != row["method_id"]:
             raise ValueError("Sensory trial must link to matching measured batch")
+    for row in bundle.chef_feedback:
+        if row["review_status"] != "reviewed":
+            continue
+        parent = batches.get(row["batch_id"])
+        if parent is None or parent["method_id"] != row["method_id"]:
+            raise ValueError("Chef feedback must link to matching measured batch")
     for row in bundle.servings:
         if row["review_status"] != "approved":
             continue
@@ -284,6 +321,15 @@ def audit_evidence(bundle: FieldEvidence) -> None:
             raise ValueError("Serving package evidence references are required")
         if any(pid not in packages or packages[pid]["review_status"] != "reviewed" for pid in referenced):
             raise ValueError("Serving package labels must be independently reviewed")
+        kinds = {packages[pid]["ingredient_id"] for pid in referenced}
+        if not kinds & {"wet_awara", "fried_awara"} or "yaji" not in kinds:
+            raise ValueError("Suya serving requires reviewed awara and yaji package/recipe records")
+        if not any(
+            f["batch_id"] == batch["batch_id"] and f["review_status"] == "reviewed"
+            and f["method_id"] == batch["method_id"]
+            for f in bundle.chef_feedback
+        ):
+            raise ValueError("Approved serving requires reviewed chef or restaurant-owner feedback")
         if not any(
             s["batch_id"] == batch["batch_id"] and s["review_status"] == "reviewed"
             and s["method_id"] == batch["method_id"]
@@ -325,3 +371,30 @@ def sensory_snapshot(bundle: FieldEvidence) -> list[dict[str, str | float | int]
             },
         })
     return result
+
+def serving_snapshot(bundle: FieldEvidence) -> list[dict[str, str | float]]:
+    """Reviewed measured cost/portion evidence, never a certified serving recommendation."""
+    audit_evidence(bundle)
+    batches = {row["batch_id"]: row for row in bundle.batches}
+    summary = []
+    for row in bundle.approved_servings:
+        batch = batches[row["batch_id"]]
+        full_cost = sum(
+            float(batch[field]) for field in (
+                "purchased_ingredient_cost_ngn", "fuel_energy_cost_ngn",
+                "labour_cost_ngn", "packaging_cost_ngn", "other_cost_ngn",
+            )
+        )
+        summary.append({
+            "serving_id": row["serving_id"],
+            "method_id": row["method_id"],
+            "recorded_finished_g": float(batch["finished_serving_g"]),
+            "recorded_listed_cost_ngn": round(full_cost, 2),
+            "recorded_prep_minutes": float(batch["prep_minutes"]),
+            "protein_g": float(row["protein_g"]),
+            "protein_evidence_type": row["protein_evidence_type"],
+            "protein_source": row["protein_source"],
+            "review_date": row["review_date"],
+            "evidence_level": "team-reviewed field record, not allergen or food-safety certification",
+        })
+    return summary
