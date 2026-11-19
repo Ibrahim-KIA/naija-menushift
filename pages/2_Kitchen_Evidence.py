@@ -15,8 +15,8 @@ import pandas as pd
 import streamlit as st
 
 from menushift.food_evidence import (
-    FieldEvidence,
     HEADER_GROUPS,
+    FieldEvidence,
     audit_evidence,
     load_field_evidence,
     read_evidence_csv,
