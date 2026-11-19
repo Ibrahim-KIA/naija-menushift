@@ -220,8 +220,15 @@ def test_serving_cannot_approve_without_batch_sensory_or_chef_review():
         audit_evidence(replace(fixture, sensory=()))
     with pytest.raises(ValueError, match="chef"):
         audit_evidence(replace(fixture, chef_feedback=()))
-    with pytest.raises(ValueError, match="yaji"):
+    with pytest.raises(ValueError, match="independently reviewed"):
         audit_evidence(replace(fixture, packages=(fixture.packages[0],)))
+    serving_without_yaji = dict(fixture.servings[0], package_ids="pkg-awara")
+    with pytest.raises(ValueError, match="yaji"):
+        audit_evidence(replace(
+            fixture,
+            packages=(fixture.packages[0],),
+            servings=(serving_without_yaji,),
+        ))
 
 
 def test_invalid_sensory_requires_consent_and_range():
