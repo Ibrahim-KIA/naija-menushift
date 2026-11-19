@@ -75,8 +75,8 @@ def test_price_shock_changes_estimated_cost_not_protein():
     base_by_id = {c.identifier: c for c in baseline.candidates}
     high_by_id = {c.identifier: c for c in raised.candidates}
     assert set(base_by_id) == set(high_by_id)
-    for key in base_by_id:
-        a, b = base_by_id[key].evaluation, high_by_id[key].evaluation
+    for key, original in base_by_id.items():
+        a, b = original.evaluation, high_by_id[key].evaluation
         assert b.cost_ngn >= a.cost_ngn
         assert b.protein_g == a.protein_g
 
@@ -85,7 +85,7 @@ def test_frontier_members_are_nondominated():
     result = plan()
     frontier = result.frontier
     assert frontier
-    assert set(c.identifier for c in frontier) <= set(c.identifier for c in result.eligible)
+    assert {c.identifier for c in frontier} <= {c.identifier for c in result.eligible}
     for item in frontier:
         for other in result.eligible:
             if other is item:
