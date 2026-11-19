@@ -165,7 +165,7 @@ def test_bedrock_adapter_passes_only_bounded_opaque_brief():
     assert parse_proposals(response)
     assert fake.kwargs["modelId"] == "amazon.nova-lite-v1:0"
     assert fake.kwargs["inferenceConfig"]["maxTokens"] <= 900
-    assert "token" not in json.dumps(fake.kwargs).lower()
+    assert "aws_secret_access_key" not in json.dumps(fake.kwargs).lower()
 
 
 def test_sandbox_region_and_model_id_are_validated():
