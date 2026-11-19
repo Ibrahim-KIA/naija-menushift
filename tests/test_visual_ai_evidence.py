@@ -231,6 +231,21 @@ def test_serving_cannot_approve_without_batch_sensory_or_chef_review():
         ))
 
 
+def test_serving_approval_checks_food_state_cross_contact_and_protein_mass():
+    fixture = _bundle()
+    wrong_state = dict(fixture.servings[0], serving_food_state="fried_grilled")
+    with pytest.raises(ValueError, match="food state"):
+        audit_evidence(replace(fixture, servings=(wrong_state,)))
+    unknown_contact = dict(fixture.packages[1], cross_contact_review="unknown")
+    with pytest.raises(ValueError, match="cross-contact"):
+        audit_evidence(replace(
+            fixture, packages=(fixture.packages[0], unknown_contact),
+        ))
+    impossible_protein = dict(fixture.servings[0], protein_g="200")
+    with pytest.raises(ValueError, match="protein"):
+        audit_evidence(replace(fixture, servings=(impossible_protein,)))
+
+
 def test_invalid_sensory_requires_consent_and_range():
     fixture = _bundle()
     bad = dict(fixture.sensory[0], consent_confirmed="no")
