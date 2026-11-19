@@ -324,6 +324,9 @@ def audit_evidence(bundle: FieldEvidence) -> None:
         kinds = {packages[pid]["ingredient_id"] for pid in referenced}
         if not kinds & {"wet_awara", "fried_awara"} or "yaji" not in kinds:
             raise ValueError("Suya serving requires reviewed awara and yaji package/recipe records")
+        yaji_records = [packages[pid] for pid in referenced if packages[pid]["ingredient_id"] == "yaji"]
+        if any(p["plant_derived_review"] != "yes" for p in yaji_records):
+            raise ValueError("Plant-based suya requires a verified plant-derived yaji formulation")
         if not any(
             f["batch_id"] == batch["batch_id"] and f["review_status"] == "reviewed"
             and f["method_id"] == batch["method_id"]
