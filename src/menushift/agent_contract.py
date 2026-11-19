@@ -88,7 +88,7 @@ class Proposer(Protocol):
 
 def _amount(value: Any, field: str, *, maximum: float) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{field} must be a number")
+        raise TypeError(f"{field} must be a number")
     n = float(value)
     if not math.isfinite(n) or n < 0 or n > maximum:
         raise ValueError(f"{field} outside permitted range")
