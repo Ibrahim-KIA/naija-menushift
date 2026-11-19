@@ -24,46 +24,76 @@ class RecipeTrial:
     evidence_gaps: tuple[str, ...]
     notes: tuple[str, ...]
 
+    @property
+    def cookbook_title(self) -> str:
+        return f"{self.method} — Suya-inspired kitchen trial"
+
     def to_markdown(self, candidate: RecipeCandidate) -> str:
-        """Print a plain-text, source-led trial worksheet for an independent reviewer."""
+        """Printable cookbook-style trial card, with honest evidence disclosures.
+
+        A cookbook structure does NOT make this a validated food-safe recipe.
+        """
         lines = [
-            "# Naija MenuShift — Kitchen Trial Worksheet",
-            f"Candidate: {self.method} | {candidate.portion_g:.0f} g FINISHED-WEIGHT ASSUMPTION",
-            "STATUS: RESEARCH EXPERIMENT — NOT CERTIFIED OR READY FOR FOOD SERVICE",
+            f"# {self.cookbook_title}",
             "",
-            "## Provisional model output",
-            f"Listed cost (incomplete): ₦{candidate.evaluation.cost_ngn:.2f}",
-            f"Ingredient portion cost: ₦{candidate.evaluation.ingredient_cost_ngn:.2f}",
-            f"Listed preparation cost: ₦{candidate.evaluation.processing_cost_ngn:.2f}",
-            f"Estimated protein: {candidate.evaluation.protein_g:.2f} g",
-            f"Assumed preparation duration: {candidate.evaluation.prep_minutes:.0f} minutes",
-            "Unmeasured processing costs, coagulant, energy, labour and losses may change the result.",
+            "> **RESEARCH TEST RECIPE — Not approved for food service.**",
             "",
-            "## Ingredient purchase assumptions",
+            "A suya-inspired awara preparation to test ingredient costs, skewer stability",
+            "and practical serving yields under documented kitchen conditions.",
+            "",
+            "## At a glance",
+            "- **Yield:** 1 experimental portion (final mass not measured)",
+            f"- **Target finished mass:** {candidate.portion_g:.0f} g (model assumption)",
+            f"- **Time:** {candidate.evaluation.prep_minutes:.0f} minutes (unmeasured estimate)",
+            f"- **Listed ingredient + processing cost:** ₦{candidate.evaluation.cost_ngn:.2f}",
+            f"- **Estimated protein:** {candidate.evaluation.protein_g:.1f} g (source-food proxy)",
+            "- **Allergens:** Contains soy; additional seasoning/cross-contact review required.",
+            "- **Equipment:** " + ", ".join(sorted(candidate.required_equipment)),
+            "",
+            "## Ingredients (purchased amounts, not measured finished quantities)",
         ]
         for ingredient in candidate.ingredient_lines:
-            lines.append(
-                f"- {ingredient.name}: {ingredient.purchase_g:.2f} g purchased, "
-                f"₦{ingredient.estimated_cost_ngn:.2f} modelled, "
-                f"~{ingredient.estimated_protein_g:.2f} g source-referenced protein"
-            )
-            lines.append(
-                f"  Price: {ingredient.source}. Nutrition: {ingredient.nutrition_source} "
-                f"({ingredient.nutrition_state}). Label: {ingredient.allergen_labels or 'unreviewed'}."
-            )
+            lines.append(f"- {ingredient.purchase_g:.1f} g {ingredient.name}")
         if candidate.oil_cl:
             lines.append(
-                f"- Oil allowance: {candidate.oil_cl:g} cl assigned to other/processing "
-                "cost (NOT measured oil uptake)"
+                f"- {candidate.oil_cl:g} cl vegetable oil allowance for the fried variant "
+                "(model input; oil absorption unmeasured)"
             )
-        lines.extend(["", "## Experimental preparation protocol"])
+        lines.extend([
+            "- **Yaji / suya spice mix:** Not specified by the verified dataset; obtain a "
+            "reviewed, weighed formulation before any actual serving.",
+            "",
+            "## Method — numbered kitchen trial",
+        ])
         for number, step in enumerate(self.steps, 1):
-            lines.append(f"{number}. {step.heading}: {step.instruction}")
-        lines.extend(["", "## Measurements and validation still required"])
+            lines.append(f"{number}. **{step.heading}.** {step.instruction}")
+        lines.extend([
+            "",
+            "## Practical checks before tasting or serving",
+            "- Record weighed raw, processed and final portions, cooking duration, oil uptake and fuel.",
+            "- Confirm soy and peanut/yaji allergens, packaged seasoning labels and shared equipment.",
+            "- Use the food specialist's approved handling and cooking procedure; no invented "
+            "temperature, storage or safety guarantees appear in this card.",
+            "",
+            "## Price and nutrition evidence",
+        ])
+        for ingredient in candidate.ingredient_lines:
+            lines.extend([
+                f"- **{ingredient.name}** — estimated ₦{ingredient.estimated_cost_ngn:.2f} "
+                f"for {ingredient.purchase_g:.1f} g; "
+                f"~{ingredient.estimated_protein_g:.2f} g modelled protein",
+                f"  - Price: {ingredient.source}",
+                f"  - Nutrition: {ingredient.nutrition_source} "
+                f"({ingredient.nutrition_state}); label: {ingredient.allergen_labels or 'unreviewed'}",
+            ])
+        lines.extend([
+            "",
+            "## Measurements needed for a real recipe",
+        ])
         lines.extend(f"- {gap}" for gap in self.evidence_gaps)
-        lines.extend(["", "## Safety and interpretation"])
+        lines.extend(["", "## Limitations"])
         lines.extend(f"- {note}" for note in self.notes)
-        return "\n".join(lines) + "\n"
+        return "\\n".join(lines) + "\\n"
 
 
 METHOD_PROCEDURES = {
