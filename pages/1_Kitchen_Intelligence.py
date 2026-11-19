@@ -6,7 +6,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from menushift.kitchen_optimizer import explore
+from menushift.kitchen_optimizer import INVENTORY_ITEMS, explore
+from menushift.recipe_trial import build_trial
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "data" / "sources"
@@ -89,8 +90,8 @@ st.markdown(
 
 st.warning(
     "Research prototype: ingredient prices and published nutrient references are sourced, "
-    "but cooked-serving yields, labour, energy, taste and safety are NOT yet verified. "
-    "Outputs are estimates, not approved restaurant recipes.",
+    "but cooked-serving yields, coagulant, labour, energy, oil retention, taste and safety "
+    "are NOT yet verified. Listed costs are incomplete and not commercial serving prices.",
     icon="⚠️",
 )
 
@@ -106,10 +107,10 @@ st.caption("Starting with one properly tested dish. More meals can be added thro
 
 with st.container(border=True):
     st.markdown("### 02 · Your constraints")
-    st.caption("Live simulation — results update when you change a requirement.")
+    st.caption("Live simulation — results update when you change a requirement. All price and time feasibility is provisional.")
     b, p, t = st.columns(3)
     budget = b.number_input(
-        "Maximum estimated cost per serving (₦)",
+        "Maximum budget for listed costs (₦)",
         min_value=1.0, max_value=100000.0, value=750.0, step=50.0,
     )
     protein = p.number_input(
@@ -139,6 +140,13 @@ with st.container(border=True):
         format_func=lambda code: labels[code],
         help="Options needing absent equipment are not recommended.",
     )
+    stock = st.multiselect(
+        "Which ingredients do you currently have?",
+        options=list(INVENTORY_ITEMS),
+        default=list(INVENTORY_ITEMS),
+        format_func=lambda key: INVENTORY_ITEMS[key],
+        help="Reported stock is a hard constraint. Selecting an item does not verify its label or supplier.",
+    )
     with st.expander("Advanced assumptions, allergens and scenarios"):
         size_min, size_max = st.select_slider(
             "Illustrative finished serving sizes (grams)",
@@ -148,6 +156,22 @@ with st.container(border=True):
             "Exclude these declared allergens",
             ["soy", "peanut", "wheat", "sesame", "milk", "egg", "tree nut", "fish", "shellfish"],
             help="Unknown ingredient labels cause exclusion, not a claim of allergen safety.",
+        )
+        st.caption("Optional, unmeasured seasoning amounts for a trial only; no validated yaji recipe exists.")
+        season_a, season_b = st.columns(2)
+        onion_g = season_a.number_input(
+            "Onions (purchased g; assumption)", min_value=0.0, max_value=100.0, value=0.0, step=1.0,
+        )
+        pepper_g = season_b.number_input(
+            "Pepper (purchased g; assumption)", min_value=0.0, max_value=100.0, value=0.0, step=1.0,
+        )
+        season_c, season_d = st.columns(2)
+        salt_g = season_c.number_input(
+            "Salt (purchased g; assumption)", min_value=0.0, max_value=20.0, value=0.0, step=0.5,
+        )
+        seasoning_g = season_d.number_input(
+            "Seasoning cube (purchased g; unreviewed label)",
+            min_value=0.0, max_value=20.0, value=0.0, step=1.0,
         )
         oil_cl = st.number_input(
             "Oil for fried method (centilitres, assumption)",
@@ -176,6 +200,8 @@ try:
         protein_target_g=protein,
         max_prep_minutes=max_time,
         equipment=frozenset(equipment),
+        available_ingredients=frozenset(stock),
+        onion_g=onion_g, pepper_g=pepper_g, salt_g=salt_g, seasoning_g=seasoning_g,
         portions_g=tuple(range(int(size_min), int(size_max) + 1, 20)),
         preference=preference,
         avoid_allergens=tuple(avoid),
@@ -196,7 +222,13 @@ a.metric("Candidates evaluated", f"{search.inspected}")
 b.metric("Within hard limits", f"{len(search.eligible)}")
 c.metric("Pareto alternatives", f"{len(search.frontier)}")
 if search.skipped_equipment:
-    st.caption(f"{search.skipped_equipment} candidate configurations excluded for unavailable equipment.")
+    st.caption(f"{search.skipped_equipment} configurations excluded for unavailable equipment.")
+if search.skipped_ingredients:
+    st.caption(f"{search.skipped_ingredients} configurations excluded for unavailable ingredients.")
+st.caption(
+    "Eligibility is against *listed* costs, approximate nutrients and assumed durations; "
+    "it does not guarantee affordability when unmeasured overheads are added."
+)
 
 if not search.eligible:
     st.error("No plant-based formulation meets all of your requirements.")
@@ -207,9 +239,9 @@ if not search.eligible:
     st.info("We don't invent a recommendation when your constraints cannot be satisfied.")
 else:
     cards = (
-        ("Budget-first", "budget", "Lowest estimated serving cost within your limits"),
-        ("Protein-first", "protein", "Highest estimated protein within your limits"),
-        ("Kitchen-first", "kitchen", "Fastest assumed preparation within your limits"),
+        ("Budget-first", "budget", "Lowest modelled ingredient/known cost within your limits"),
+        ("Protein-first", "protein", "Highest source-referenced estimated protein within limits"),
+        ("Kitchen-first", "kitchen", "Shortest assumed preparation within your limits"),
     )
     cols = st.columns(3)
     for col, (heading, objective, description) in zip(cols, cards):
@@ -223,7 +255,7 @@ else:
                 unsafe_allow_html=True,
             )
             st.caption(description)
-            st.metric("Estimated cost", f"₦{candidate.evaluation.cost_ngn:,.0f}")
+            st.metric("Listed cost (incomplete)", f"₦{candidate.evaluation.cost_ngn:,.0f}")
             st.write(
                 f"**{candidate.portion_g:.0f} g** finished assumption · "
                 f"**{candidate.evaluation.protein_g:.1f} g** estimated protein"
@@ -268,11 +300,14 @@ else:
         )
     with recipe:
         st.markdown("#### Ingredient and quantity worksheet")
+        st.caption("The model currently has NO verified complete suya seasoning/yaji formula.")
         st.dataframe(
             pd.DataFrame([
                 {
                     "Ingredient": line.name,
                     "Purchased grams (estimated)": line.purchase_g,
+                    "Listed cost (₦)": line.estimated_cost_ngn,
+                    "Estimated protein (g)": line.estimated_protein_g,
                     "Declared label": line.allergen_labels or "Unreviewed",
                 }
                 for line in selected.ingredient_lines
@@ -290,6 +325,20 @@ else:
                 "Published nutrient references may not represent local awara or the "
                 "exact finished food state; production yields are unmeasured."
             )
+        st.markdown("#### Preparation trial protocol")
+        trial = build_trial(selected)
+        for step in trial.steps:
+            st.write(f"**{step.heading}:** {step.instruction}")
+        st.download_button(
+            "Download source-traceable kitchen trial worksheet",
+            data=trial.to_markdown(selected),
+            file_name="naija-menushift-kitchen-trial.md",
+            mime="text/markdown",
+            use_container_width=True,
+        )
+        with st.expander("What must be measured before serving?"):
+            for gap in trial.evidence_gaps:
+                st.write("- " + gap)
     st.subheader("Trade-offs across eligible formulations")
     chart = pd.DataFrame([
         {
