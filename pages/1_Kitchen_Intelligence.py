@@ -331,10 +331,26 @@ else:
                 "Published nutrient references may not represent local awara or the "
                 "exact finished food state; production yields are unmeasured."
             )
-        st.markdown("#### Preparation trial protocol")
         trial = build_trial(selected)
-        for step in trial.steps:
-            st.write(f"**{step.heading}:** {step.instruction}")
+        st.markdown("#### " + trial.cookbook_title)
+        st.caption(
+            "Cookbook-style research recipe • 1 assumed serving • "
+            f"{selected.evaluation.prep_minutes:.0f} min unmeasured • soy allergen"
+        )
+        st.markdown("**Ingredients**")
+        for ingredient in selected.ingredient_lines:
+            st.markdown(f"- {ingredient.purchase_g:.1f} g {ingredient.name}")
+        if selected.oil_cl:
+            st.markdown(
+                f"- {selected.oil_cl:g} cl vegetable oil allowance (retention unmeasured)"
+            )
+        st.warning(
+            "Complete reviewed suya yaji is not in this dataset. "
+            "This is a kitchen trial, not a ready-to-serve recipe."
+        )
+        st.markdown("**Step-by-step trial method**")
+        for i, step in enumerate(trial.steps, 1):
+            st.markdown(f"**{i}. {step.heading}.** {step.instruction}")
         st.download_button(
             "Download source-traceable kitchen trial worksheet",
             data=trial.to_markdown(selected),
