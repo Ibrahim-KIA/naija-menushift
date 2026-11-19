@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 
 from .kitchen_optimizer import RecipeCandidate
+from .visual_intent import VisualIntent
 
 STYLES = {
     "Street-food": "Nigerian street-food presentation on clean brown serving paper",
@@ -73,6 +74,7 @@ def _visual_ingredients(candidate: RecipeCandidate) -> list[str]:
 def build_preview_draft(
     candidate: RecipeCandidate, *,
     style: str = "Restaurant", restaurant_request: str = "",
+    visual_intent: VisualIntent | None = None,
 ) -> PreviewDraft:
     """Build a constrained visual depiction of an already-feasible candidate."""
     if not candidate.eligible:
@@ -98,15 +100,34 @@ def build_preview_draft(
             interpreted.append(phrase)
             break
 
+    lighting = "soft natural window light"
+    setting = "neutral uncluttered background"
+    if visual_intent is not None:
+        if visual_intent.requires_recipe_change:
+            raise ValueError(
+                "Visual request asks to alter the ingredients; change and revalidate "
+                "the recipe before generating a visual"
+            )
+        if visual_intent.style != "keep":
+            presentation = STYLES[visual_intent.style]
+        if visual_intent.plating != "default":
+            presentation = visual_intent.plating
+        if visual_intent.camera != "default":
+            angle = visual_intent.camera
+        if visual_intent.lighting != "default":
+            lighting = visual_intent.lighting
+        if visual_intent.setting != "default":
+            setting = visual_intent.setting
+        interpreted = list(visual_intent.interpretation)
+
     extras = _visual_ingredients(candidate)
     extras_part = ", with " + " and ".join(extras) if extras else ""
     prompt = (
         "Photorealistic food concept of Nigerian plant-based suya-inspired "
         f"{METHODS[method]}{extras_part}. "
-        f"{presentation}. {angle}. "
-        "Realistic irregular texture, one modest portion, natural light, "
-        "credible home or restaurant food photography. "
-        "Only the stated ingredients; depict a plausible concept, not a tested dish."
+        f"{presentation}, {angle}, {lighting}, {setting}. "
+        "One modest portion; realistic irregular texture; documentary food "
+        "photography. Only listed ingredients; illustrative, not tested."
     )
     negative = (
         "beef, animal meat, fish, peanut topping, heavy yaji coating, "
