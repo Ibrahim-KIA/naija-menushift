@@ -33,7 +33,7 @@ def _date_for(period: str) -> tuple[str, str]:
         return "2026-05-31", "Nigeria national average"
     if period == "2026-04":
         return "2026-04-30", "Nigeria national average"
-    return "2026-11-14", "Workbook quote, city not recorded"
+    return "2026-11-14", "Workbook reference; original quote date and city unrecorded (14 Nov is retrieval date only)"
 
 
 def _ingredient(
