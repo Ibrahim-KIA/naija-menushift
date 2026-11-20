@@ -190,7 +190,10 @@ with summary:
         st.info("Fried awara stays out until you enter an oil amount in centilitres. The workbook prices oil by the 75 cl bottle, not by a serving.")
     if feasible:
         choice = feasible[0]
-        st.success("Eligible under these controls and the sourced prices.")
+        st.info(
+            "Provisional calculation meets the entered numeric and ingredient constraints. "
+            "This is NOT a safe-to-serve recipe, nutrient certification or current supplier quote."
+        )
         st.subheader(choice.name)
         cost_col, protein_metric, time_col = st.columns(3)
         cost_col.metric("Total cost for this portion", f"₦{choice.cost_ngn:,.0f}")
@@ -198,7 +201,10 @@ with summary:
         time_col.metric("Preparation time", f"{choice.prep_minutes:.0f} min")
         st.caption("Protein for firm, pressed, and frozen pieces is the firm-tofu reference on the wet curd that went in. Pressing concentrates that curd. It does not create protein.")
         if not choice.allergen_review_complete:
-            st.warning("A spice label is unreviewed. This result is not cleared for an allergen exclusion or for food service.")
+            st.warning("Ingredient labels are incomplete. This is NOT cleared for an allergy restriction or food service.")
+        with st.expander("Evidence & safety limitations", expanded=True):
+            for warning in choice.evidence_warnings:
+                st.warning(warning)
         with st.expander("Why this option came first", expanded=True):
             for reason in choice.reasons:
                 st.write("- " + reason)
@@ -223,7 +229,7 @@ with summary:
     st.bar_chart(chart)
     st.dataframe(
         pd.DataFrame([
-            {"Alternative": row.name, "Cost (₦)": row.cost_ngn, "Est. protein (g)": row.protein_g, "Minutes": row.prep_minutes, "Status": "Eligible" if row.feasible else "Excluded"}
+            {"Alternative": row.name, "Cost (₦)": row.cost_ngn, "Est. protein (g)": row.protein_g, "Minutes": row.prep_minutes, "Status": "Provisional" if row.feasible else "Excluded"}
             for row in plants
         ]),
         width="stretch",
@@ -281,7 +287,7 @@ with stress:
         preference=preference, avoid_allergens=avoid,
     )
     records = [
-        {"Scenario": label, "Option": row.name, "Cost (naira)": row.cost_ngn, "Status": "Eligible" if row.feasible else "Excluded"}
+        {"Scenario": label, "Option": row.name, "Cost (naira)": row.cost_ngn, "Status": "Provisional" if row.feasible else "Excluded"}
         for label, collection in scenarios.items()
         for row in collection
         if row.plant_only
