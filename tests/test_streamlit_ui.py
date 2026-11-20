@@ -20,7 +20,7 @@ def test_public_first_use_compares_awara_under_a_budget():
     at = _run()
     assert any("Naija MenuShift" in title.value for title in at.title)
     assert any("Maximum cost per serving" in box.label for box in at.number_input)
-    assert at.success
+    assert any("Provisional calculation" in info.value for info in at.info)
     titles = [header.value for header in at.subheader]
     assert any(title.startswith(("Firm", "Pressed", "Frozen")) for title in titles)
     assert not any(title.startswith("Beef") for title in titles)
@@ -34,7 +34,7 @@ def test_low_budget_abstains_without_recommending_beef():
     at.number_input(key="budget").set_value(20.0).run()
     assert not at.exception
     assert any("No plant-protein option" in err.value for err in at.error)
-    assert not at.success
+    assert not any("Provisional calculation" in info.value for info in at.info)
 
 
 def test_soy_exclusion_removes_every_awara_option():
@@ -52,7 +52,7 @@ def test_high_protein_target_drops_the_firm_option():
     firm = status[status["Alternative"].astype(str).str.startswith("Firm")].iloc[0]
     pressed = status[status["Alternative"].astype(str).str.startswith("Pressed")].iloc[0]
     assert firm["Status"] == "Excluded"
-    assert pressed["Status"] == "Eligible"
+    assert pressed["Status"] == "Provisional"
 
 
 def test_jollof_context_reuses_constraints_and_discloses_partial_scope():
@@ -61,7 +61,14 @@ def test_jollof_context_reuses_constraints_and_discloses_partial_scope():
     menu.set_value("jollof_side").run()
     assert not at.exception
     assert any("PARTIAL transformation" in w.value for w in at.warning)
-    assert at.success
+    assert any("Provisional calculation" in info.value for info in at.info)
     all_prices = " ".join(frame.value.to_csv() for frame in at.dataframe)
     assert "awara" in all_prices.lower()
     assert not any("chicken" in h.value.lower() for h in at.subheader)
+
+
+def test_source_issues_visible_before_restaurant_use():
+    at = _run()
+    assert not at.exception
+    assert any("Evidence & safety limitations" in e.label for e in at.expander)
+    assert any("Research estimate only" in warning.value for warning in at.warning)
