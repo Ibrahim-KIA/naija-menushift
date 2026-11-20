@@ -1,6 +1,7 @@
 """Premium restaurant-first, source-aware Kitchen Intelligence experience."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -11,12 +12,15 @@ from menushift.bedrock_image import (
     TitanImageGenerator,
     workshop_generation_enabled,
 )
+from menushift.food_evidence import load_field_evidence, serving_snapshot
 from menushift.kitchen_optimizer import INVENTORY_ITEMS, explore
 from menushift.recipe_trial import build_trial
+from menushift.visual_intent import BedrockVisualInterpreter, visual_interpretation_enabled
 from menushift.visual_preview import STYLES, build_preview_draft
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "data" / "sources"
+EVIDENCE = ROOT / "data" / "evidence_intake"
 
 st.set_page_config(
     page_title="Kitchen Intelligence | Naija MenuShift",
@@ -340,7 +344,7 @@ else:
         trial = build_trial(selected)
         st.markdown("#### AI dish visual preview")
         st.caption(
-            "An optional *concept illustration*, not a photograph or prediction "
+            "An optional concept illustration, not a photo or reliable prediction "
             "of the cooked dish. The chosen recipe remains authoritative."
         )
         visual_style = st.selectbox(
@@ -349,25 +353,67 @@ else:
             index=1,
             key="preview_style",
         )
-        visual_request = st.text_input(
-            "Describe the look you want (optional)",
-            placeholder="e.g. overhead on a white plate",
-            max_chars=250,
+        visual_request = st.text_area(
+            "Describe your preferred appearance or presentation",
+            placeholder="e.g. a relaxed outdoor street-food setting at sunset, "
+                        "overhead on a wooden serving board",
+            max_chars=600,
             key="preview_request",
-            help="Currently interprets approved plating and camera cues. "
-                 "Ingredient changes must go through recipe validation.",
+            help="The free-form AI can interpret presentation, light and camera direction. "
+                 "Requests to change food must go through the recipe engine.",
         )
+        intent_key = (selected.identifier, visual_style, visual_request)
+        if visual_interpretation_enabled():
+            if st.button("Interpret my description with AI", use_container_width=True):
+                try:
+                    interpreter = BedrockVisualInterpreter(
+                        model_id=os.environ["BEDROCK_TEXT_MODEL_ID"]
+                    )
+                    intent = interpreter.interpret(visual_request)
+                    st.session_state["visual_interpretation"] = {
+                        "key": intent_key,
+                        "intent": intent,
+                    }
+                except Exception:  # noqa: BLE001 — external API failures cannot affect recipe
+                    st.session_state.pop("visual_interpretation", None)
+                    st.warning(
+                        "AI interpretation was unavailable. The controlled local "
+                        "presentation parser is still available."
+                    )
+        else:
+            st.caption(
+                "Advanced Bedrock text interpretation becomes available when an "
+                "event-approved text model is configured. Basic safe cues work offline."
+            )
+        saved_intent = st.session_state.get("visual_interpretation")
+        selected_intent = (
+            saved_intent["intent"] if saved_intent and saved_intent["key"] == intent_key
+            else None
+        )
+        recipe_change_requested = bool(
+            selected_intent and selected_intent.requires_recipe_change
+        )
+        if recipe_change_requested:
+            st.warning(
+                "Your visual request appears to change the recipe. Please select or "
+                "revalidate the ingredients in the recipe editor first. "
+                "No image will be generated from this request."
+            )
         draft = build_preview_draft(
-            selected, style=visual_style, restaurant_request=visual_request
+            selected, style=visual_style, restaurant_request=visual_request,
+            visual_intent=None if recipe_change_requested else selected_intent,
         )
         st.caption(
-            "Visual cues interpreted: "
-            + (", ".join(draft.interpreted_preferences) or
-               "default presentation only")
+            "Interpreted visual direction: "
+            + (", ".join(draft.interpreted_preferences) or "default presentation only")
         )
-        with st.expander("Inspect or copy the recipe-grounded image prompt"):
+        if selected_intent is not None and not recipe_change_requested:
+            st.caption("Interpretation source: optional Bedrock text model, locally validated.")
+        else:
+            st.caption("Interpretation source: conservative local parser.")
+        with st.expander("Inspect or download the recipe-grounded image prompt"):
             st.code(draft.prompt, language=None)
-            st.caption("Excluded visual elements: " + draft.negative_prompt)
+            st.caption("Excluded elements: " + draft.negative_prompt)
             st.download_button(
                 "Download image prompt",
                 data=draft.prompt + "\\n",
@@ -375,12 +421,21 @@ else:
                 mime="text/plain",
                 use_container_width=True,
             )
-        if workshop_generation_enabled():
-            if st.button(
-                "Generate one AI dish concept image", type="secondary",
-                use_container_width=True,
-                help="One explicit model invocation; workshop model approval required.",
-            ):
+        image_allowed = workshop_generation_enabled()
+        if st.button(
+            "Generate one AI dish concept image",
+            type="secondary",
+            disabled=recipe_change_requested,
+            use_container_width=True,
+            help="One explicit request only, requiring an authorised image model.",
+        ):
+            if not image_allowed:
+                st.warning(
+                    "Image generation cannot run yet: the organisers' AWS account "
+                    "does not list an authorised image model. The prompt is ready "
+                    "and the recipe remains available."
+                )
+            else:
                 try:
                     generator = TitanImageGenerator(
                         model_id=TITAN_IMAGE_MODEL_ID, approved=True
@@ -391,29 +446,31 @@ else:
                         "bytes": generated.content,
                         "mime": generated.mime_type,
                     }
-                except Exception:  # noqa: BLE001  — external SDK errors vary by provider
+                except Exception:  # noqa: BLE001 — external provider failures are isolated
                     st.error(
                         "Image generation failed or access was denied. "
                         "The recipe and prompt remain available."
                     )
-            preview_result = st.session_state.get("preview_result")
-            if preview_result and preview_result["key"] == draft.fingerprint:
-                st.image(
-                    preview_result["bytes"],
-                    caption=draft.label,
-                    use_container_width=True,
-                )
-                st.download_button(
-                    "Download illustrative image",
-                    data=preview_result["bytes"],
-                    file_name="naija-menushift-concept.png",
-                    mime=preview_result["mime"],
-                )
-        else:
+        if not image_allowed:
             st.info(
                 "Image creation is not enabled for this event account. "
-                "The official model allowlist does not include Titan Image Generator. "
-                "The approved-model prompt is ready if organisers authorise access."
+                "The organiser's model allowlist does not include Titan Image Generator. "
+                "No paid image-generation calls will be attempted."
+            )
+        preview_result = st.session_state.get("preview_result")
+        if (
+            image_allowed and not recipe_change_requested and preview_result
+            and preview_result["key"] == draft.fingerprint
+        ):
+            st.image(
+                preview_result["bytes"], caption=draft.label,
+                use_container_width=True,
+            )
+            st.download_button(
+                "Download illustrative image",
+                data=preview_result["bytes"],
+                file_name="naija-menushift-concept.png",
+                mime=preview_result["mime"],
             )
         st.markdown("#### " + trial.cookbook_title)
         st.caption(
@@ -444,6 +501,28 @@ else:
         with st.expander("What must be measured before serving?"):
             for gap in trial.evidence_gaps:
                 st.write("- " + gap)
+        with st.expander("Independent serving evidence (only when human-approved)"):
+            try:
+                evidence = load_field_evidence(EVIDENCE)
+                observed = [
+                    row for row in serving_snapshot(evidence)
+                    if row["method_id"] == selected.evaluation.option_id
+                ]
+                if observed:
+                    st.dataframe(pd.DataFrame(observed), hide_index=True)
+                    st.caption(
+                        "Measured-batch observations are displayed separately from "
+                        "the experimental optimisation values. A reviewed sensory "
+                        "panel is not proof of population-wide taste preference."
+                    )
+                else:
+                    st.info(
+                        "No matching independently approved serving records yet. "
+                        "Amina's published food references and price leads are "
+                        "not measurements of this finished recipe."
+                    )
+            except (OSError, ValueError) as exc:
+                st.error(f"Evidence registry requires correction: {exc}")
     st.subheader("Trade-offs across eligible formulations")
     chart = pd.DataFrame([
         {

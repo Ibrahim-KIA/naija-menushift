@@ -71,7 +71,7 @@ def test_missing_or_invalid_options_rejected():
     with pytest.raises(ValueError):
         build_preview_draft(candidate(), style="Unsupported")
     with pytest.raises(ValueError):
-        build_preview_draft(candidate(), restaurant_request="x" * 251)
+        build_preview_draft(candidate(), restaurant_request="x" * 601)
     infeasible = explore(
         SOURCES, budget_ngn=1, protein_target_g=20, max_prep_minutes=100,
         equipment=frozenset({"grill"}), portions_g=(140,),
