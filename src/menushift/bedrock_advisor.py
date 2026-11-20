@@ -148,7 +148,7 @@ def advice_from_client(
     try:
         response = client.converse(**request)
         choices = _parse_choices(response, {item["candidate_id"] for item in snapshot})
-    except (Exception,):  # noqa: BLE001 - external service and schema failures must never affect safety
+    except Exception:  # noqa: BLE001 - external service and schema failures must never affect safety
         return AdviceResult(
             "unavailable",
             message="AI suggestions unavailable or rejected; use deterministic rankings and evidence warnings.",
