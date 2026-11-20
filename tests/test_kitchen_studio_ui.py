@@ -35,3 +35,12 @@ def test_no_grill_blocks_all_candidates_in_ui():
     item.set_value([]).run()
     assert not app.exception
     assert any("No plant-based formulation" in x.value for x in app.error)
+
+
+def test_second_dish_studio_labels_unpriced_meal_parts():
+    app = launch()
+    select = next(box for box in app.selectbox if box.label == "Existing menu dish")
+    select.set_value("jollof_side").run()
+    assert not app.exception
+    assert any("PARTIAL menu adaptation" in w.value for w in app.warning)
+    assert any("Formulation" in x.value or "Find a formulation" in x.value for x in app.subheader)
