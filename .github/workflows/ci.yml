@@ -1,7 +1,7 @@
 name: Quality gate
 on:
   push:
-    branches: [main, 'delivery/multi-dish-evidence-*', 'delivery/diversified-menu-evidence-*']
+    branches: [main, 'delivery/multi-dish-evidence-*', 'delivery/diversified-menu-evidence-*', 'delivery/optional-bedrock-advisor-*']
   pull_request:
   workflow_dispatch:
 permissions:
