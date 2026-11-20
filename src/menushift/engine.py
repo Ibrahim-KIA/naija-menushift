@@ -11,10 +11,11 @@ import math
 import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from .quality import numeric_health
+from .safety import origin_reviewed, read_allergen_labels, validate_exclusions
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,10 @@ class Evaluation:
     ingredient_cost_ngn: float = 0.0
     processing_cost_ngn: float = 0.0
     allergen_review_complete: bool = False
+    animal_origin_review_complete: bool = False
+    nutrition_reference_complete: bool = False
+    evidence_warnings: tuple[str, ...] = ()
+    food_service_ready: bool = False  # No recipe may be labelled safe without independent review
     # purpose-specific traceability; the cost here includes all listed ingredients and explicit overheads
 
     def to_dict(self) -> dict:
@@ -55,6 +60,7 @@ class Dataset:
     options: list[dict[str, str]]
     items: list[dict[str, str]]
     demo: bool
+    verified_input: bool = False
 
 
 def read_csv(path: str | Path) -> list[dict[str, str]]:
@@ -79,7 +85,7 @@ def load_dataset(folder: str | Path, *, demo: bool) -> Dataset:
     missing = [name for name in required if not (folder / name).exists()]
     if missing:
         raise ValueError(f"Missing data files: {', '.join(missing)}")
-    data = Dataset(*(read_csv(folder / name) for name in required), demo=demo)
+    data = Dataset(*(read_csv(folder / name) for name in required), demo=demo, verified_input=not demo)
     validate_dataset(data)
     return data
 
@@ -119,10 +125,21 @@ def validate_dataset(data: Dataset) -> None:
         for field in ("price_source", "price_date", "nutrition_source", "nutrition_state", "price_region"):
             if not row.get(field, "").strip():
                 raise ValueError(f"{key}: missing provenance field {field}")
-        try:
-            date.fromisoformat(row["price_date"])
-        except ValueError as exc:
-            raise ValueError(f"{key}: price_date must be YYYY-MM-DD") from exc
+        date_value = row["price_date"].strip()
+        if date_value == "unknown" and not data.verified_input:
+            pass  # keep a research quote explicitly undated, never fabricate a quote day
+        else:
+            try:
+                recorded = date.fromisoformat(date_value)
+            except ValueError as exc:
+                raise ValueError(f"{key}: price_date must be YYYY-MM-DD") from exc
+            if recorded > datetime.now(UTC).date():
+                raise ValueError(f"{key}: future-dated price is not valid evidence")
+        origin_flag = row.get("animal_origin_reviewed", "")
+        if origin_flag and origin_flag not in ("true", "false"):
+            raise ValueError(f"{key}: animal_origin_reviewed must be true or false")
+        if data.verified_input and row["is_animal"] == "false" and origin_flag != "true":
+            raise ValueError(f"{key}: verified plant ingredient requires origin review")
         if not data.demo and any("SYNTHETIC" in row.get(x, "").upper() for x in ("price_source", "nutrition_source")):
             raise ValueError(f"{key}: synthetic fixture is forbidden in verified mode")
     for row in data.dishes:
@@ -181,13 +198,25 @@ def _costs(data: Dataset, dish_id: str, price_shock: float) -> list[dict]:
         references = set()
         allergens: set[str] = set()
         unreviewed_allergens: set[str] = set()
+        unreviewed_origin: set[str] = set()
+        nutrition_gaps: set[str] = set()
+        missing_price_dates: set[str] = set()
+        outdated_price_dates: set[str] = set()
         for line in lines:
             ing = ingredient[line["ingredient_id"]]
-            labels = {part.strip().lower() for part in ing.get("allergens", "").split(";") if part.strip()}
-            unclear = {"unknown", "verify label", "unreviewed", "not checked", "pending", "?"}
-            if not labels or (labels & unclear):
+            labels, incomplete_label = read_allergen_labels(ing.get("allergens", ""))
+            if incomplete_label:
                 unreviewed_allergens.add(ing["ingredient_id"])
-            allergens.update(labels - unclear - {"none"})
+            allergens.update(labels)
+            if not origin_reviewed(ing, demo=data.demo):
+                unreviewed_origin.add(ing["ingredient_id"])
+            if "no nutrient row" in ing.get("nutrition_source", "").lower() or ing.get("nutrition_state") == "price only":
+                nutrition_gaps.add(ing["ingredient_id"])
+            day = ing["price_date"]
+            if day == "unknown":
+                missing_price_dates.add(ing["ingredient_id"])
+            elif (datetime.now(UTC).date() - date.fromisoformat(day)).days > 30:
+                outdated_price_dates.add(ing["ingredient_id"])
             mass = _number(line, "purchase_g", op["option_id"], allow_zero=False)
             retain = _number(line, "nutrient_retention_fraction", op["option_id"])
             values["cost"] += mass * _number(ing, "price_ngn_per_kg", ing["ingredient_id"]) / 1000 * (1 + price_shock)
@@ -198,7 +227,16 @@ def _costs(data: Dataset, dish_id: str, price_shock: float) -> list[dict]:
         processing_cost = sum(_number(op, f, op["option_id"]) for f in ("energy_cost_ngn", "labour_cost_ngn", "other_cost_ngn"))
         values["cost"] += processing_cost
         numeric_health(values)
-        values.update(option=op, sources=tuple(sorted(references)), allergens=tuple(sorted(allergens)), unreviewed_allergens=tuple(sorted(unreviewed_allergens)), ingredient_cost=ingredient_cost, processing_cost=processing_cost)
+        values.update(
+            option=op, sources=tuple(sorted(references)),
+            allergens=tuple(sorted(allergens)),
+            unreviewed_allergens=tuple(sorted(unreviewed_allergens)),
+            unreviewed_origin=tuple(sorted(unreviewed_origin)),
+            nutrition_gaps=tuple(sorted(nutrition_gaps)),
+            missing_price_dates=tuple(sorted(missing_price_dates)),
+            outdated_price_dates=tuple(sorted(outdated_price_dates)),
+            ingredient_cost=ingredient_cost, processing_cost=processing_cost,
+        )
         results.append(values)
     return results
 
@@ -274,6 +312,7 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
         raise ValueError("Preparation preference is limited to 200 characters")
     if budget_ngn <= 0 or protein_target_g < 0 or max_prep_minutes <= 0:
         raise ValueError("Budget and max preparation time must be positive; protein target nonnegative")
+    excluded_labels = validate_exclusions(avoid_allergens)
     raw = _costs(data, dish_id, price_shock)
     options = [r["option"] for r in raw if r["option"]["group"] == "plant"]
     semantic = _text_scores(options, preference, text_method)
@@ -286,9 +325,13 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
         affordable = cost <= budget_ngn + 1e-7
         enough = protein + 1e-7 >= protein_target_g
         timely = prep <= max_prep_minutes
-        allergen_conflict = sorted({a.strip().lower() for a in avoid_allergens} & set(r["allergens"]))
-        unknown_allergen_status = bool(avoid_allergens) and bool(r["unreviewed_allergens"])
-        feasible = plant and affordable and enough and timely and not allergen_conflict and not unknown_allergen_status
+        allergen_conflict = sorted(excluded_labels & set(r["allergens"]))
+        unknown_allergen_status = bool(excluded_labels) and bool(r["unreviewed_allergens"])
+        unknown_animal_origin = plant and bool(r["unreviewed_origin"])
+        feasible = (
+            plant and affordable and enough and timely
+            and not allergen_conflict and not unknown_allergen_status and not unknown_animal_origin
+        )
         reasons = []
         if not plant:
             reasons.append("Beef/reference only; excluded from plant recommendations")
@@ -302,6 +345,8 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
             reasons.append("Excluded labeled allergen(s): " + ", ".join(allergen_conflict))
         if unknown_allergen_status:
             reasons.append("Cannot verify requested allergen exclusion; ingredient label review is incomplete")
+        if unknown_animal_origin:
+            reasons.append("Plant-only ingredient origin is unverified for: " + ", ".join(r["unreviewed_origin"]))
         breakdown: tuple[tuple[str, float], ...] = ()
         if feasible:
             # score = user-visible, explainable multi-criteria recommendation with text retrieval
@@ -318,6 +363,34 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
             )
         else:
             score = None
+        evidence_warnings = [
+            "Synthetic demonstration data; not a verified restaurant recipe"
+            if data.demo else
+            "Research estimate only: no approved kitchen yield, sensory or food-safety assessment"
+        ]
+        if r["nutrition_gaps"]:
+            evidence_warnings.append(
+                "Nutrient totals omit unavailable composition values for: "
+                + ", ".join(r["nutrition_gaps"])
+                + "; reported zeros are missing data, not confirmed zero nutrients"
+            )
+        if r["missing_price_dates"]:
+            evidence_warnings.append(
+                "Undated price inputs: " + ", ".join(r["missing_price_dates"])
+                + "; do not describe these as current supplier quotes"
+            )
+        if r["outdated_price_dates"]:
+            evidence_warnings.append(
+                "Prices older than 30 days: " + ", ".join(r["outdated_price_dates"])
+            )
+        if r["unreviewed_allergens"]:
+            evidence_warnings.append(
+                "Ingredient labels not fully reviewed: " + ", ".join(r["unreviewed_allergens"])
+            )
+        if r["unreviewed_origin"]:
+            evidence_warnings.append(
+                "Plant-only origin unconfirmed: " + ", ".join(r["unreviewed_origin"])
+            )
         output.append(Evaluation(
             option_id=op["option_id"], dish_id=dish_id, name=op["name"], group=op["group"],
             cost_ngn=round(cost, 2), protein_g=round(protein, 2), iron_mg=round(r["iron"], 2),
@@ -327,6 +400,10 @@ def evaluate(data: Dataset, dish_id: str, *, budget_ngn: float, protein_target_g
             reasons=tuple(reasons), sources=r["sources"], demo=data.demo, allergens=r["allergens"],
             score_breakdown=breakdown, ingredient_cost_ngn=round(r["ingredient_cost"],2), processing_cost_ngn=round(r["processing_cost"],2),
             allergen_review_complete=not bool(r["unreviewed_allergens"]),
+            animal_origin_review_complete=not bool(r["unreviewed_origin"]),
+            nutrition_reference_complete=not bool(r["nutrition_gaps"]),
+            evidence_warnings=tuple(evidence_warnings),
+            food_service_ready=False,
         ))
     return sorted(output, key=lambda x: (not x.feasible, -(x.score or 0), x.cost_ngn, x.option_id))
 
