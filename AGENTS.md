@@ -2,9 +2,8 @@
 
 This repo is a research prototype for Hack the Fork Nigeria 2026 Challenge 2. Its product scope is **many Nigerian dishes**; **suya is only the first use case**. Never hardcode the architecture to tofu or suya.
 
-## Invariants
-- `data/demo/` is SYNTHETIC. Do not describe demo numbers as real prices, measured nutrients, verified taste, or evidence of affordability.
-- `data/verified/` has to remain fail-closed until actual source/date/region and recipe observations are supplied. Never silently replace missing evidence with synthetic values.
+## Product framing\nAlways describe this product as **diversifying existing Nigerian menus with additional options**, never as mandating replacement of meat or current dishes. Current beef/chicken offerings remain on the menu; plant-based choices broaden it. Preserve these distinctions in the app, pitch, docs and future generated content.\n\n## Invariants\n- `data/demo/` is SYNTHETIC. Do not describe demo numbers as real prices, measured nutrients, verified taste, or evidence of affordability.
+- `data/curated/` is a read-only historical/reference catalog, **not** a direct nutrition/price feed to the recommendation engine. Do not promote it to verified recipe data automatically.\n- `data/verified/` has to remain fail-closed until actual source/date/region and recipe observations are supplied. Never silently replace missing evidence with synthetic values.
 - Beef/reference options are never eligible plant-based recommendations. Plant recipes must contain no declared animal ingredients.
 - A spreadsheet label is not an allergy or cross-contact certification. Explicitly report incomplete labeling.
 - Avoid unsupported assertions about protein equivalence, cooking yield, texture, nutritional adequacy or local acceptance.
@@ -21,7 +20,7 @@ This repo is a research prototype for Hack the Fork Nigeria 2026 Challenge 2. It
 ```bash
 python -m pip install -e '.[dev]'
 python -m pytest -q
-ruff check src tests app.py
+ruff check src tests pages app.py
 menushift --dish suya --budget 1500 --protein 10 --sensitivity
 streamlit run app.py
 ```

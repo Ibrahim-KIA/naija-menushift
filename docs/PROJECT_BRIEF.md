@@ -1,35 +1,34 @@
-# Project brief and problem statement
+# Naija MenuShift — menu diversification brief
 
 **Challenge:** Hack the Fork Nigeria 2026, Challenge 2 — AI for Plant-Based Menu Innovation.
 
-**Who:** Nigerian restaurant owners, chefs and menu planners assessing a new plant-based option.
+**Positioning:** Help Nigerian restaurants and caterers **diversify their existing menus** with additional plant-based choices. Current animal-based dishes can remain available; the product supports choice, not compulsory replacement.
 
-**Problem:** Restaurant teams seeking to add plant-based alternatives face uncertainty about local ingredient substitutions, serving cost, nutritional suitability, preparation effort and culinary fit. This is an **unvalidated problem hypothesis** until user interviews are completed.
+**Problem hypothesis:** Exploring extra dishes or accompaniments is difficult when local ingredient costs, nutritional references, portion yields, available equipment, allergens and culinary practicality are uncertain. Buyer interviews are needed to verify this hypothesis.
 
-**Solution hypothesis:** A reusable, evidence-aware recommendation and optimisation tool can narrow a set of ingredient/preparation options to realistic candidates for a specified restaurant dish and the chef's constraints, explain trade-offs, and reveal where direct food testing is required.
+**Solution hypothesis:** An evidence-aware recipe exploration and decision-support tool can screen optional menu additions against the restaurant's budget, estimated protein, time, equipment and dietary requirements, explain trade-offs, and identify what needs kitchen testing.
 
-**First demonstration:** Beef suya vs four plant-based preparations using tofu (plain marinated, pressed, frozen then thawed, pressed/fried/grilled). Beef is context/reference only. This is a **pilot**, not a permanent restriction to tofu or suya.
+**Current scope:** The primary pilot compares four awara/tofu preparation methods suitable for exploring a plant-based suya offering. Conventional beef suya stays as a context/reference. The second menu context explores a **tofu protein accompaniment to jollof**, not a fully costed or validated jollof meal. Vchunks is recorded as a sourced commercial example, not an approved numeric candidate.
 
-**Next research cases:** Meat pie, egusi soup, jollof/chicken, pepper soup. Additional plant protein candidates: cowpea, soy-derived products, Bambara groundnut, groundnut and other evaluated options. Do not promise that these are functional or nutritionally equivalent without testing.
+**Data status:** The live studios use historical prices and published food-composition references together with unmeasured cooking and serving assumptions. The read-only Evidence Library presents **15 curated FAO/USDA nutrient records** and **28 WFP price snapshots for Borno and Yobe in October–November 2026**, separated from the recipe engine. No live nationwide prices, customer taste scores or measured kitchen trials are claimed.
 
-## Proposed measurable success criteria (not achieved)
+## What the product can demonstrate
 
-- Four tofu methods plus one beef reference represented with source-backed cost, iron, zinc and protein values for a **defined portion and state**.
-- 100% of displayed feasible plant recommendations pass budget/protein/preparation checks in documented test cases.
-- Every displayed ingredient price has amount/unit, source, collection date and location; nutrition source documents measurement/food-state.
-- The system says **no feasible option** rather than quietly relaxing hard constraints.
-- Baseline and ±20% ingredient-price scenarios both work and are explained.
-- At least five normal/edge test cases and one food practitioner review are documented.
-- A measurable comparison with cheapest-only and generic recipe-generation approaches demonstrates whether the NLP/ranking layer adds any value.
+- Select a menu context, budget, protein threshold, preparation time and available kitchen equipment.
+- Exclude candidates that fail hard constraints, including user-specified ingredient restrictions.
+- Compare eligible candidates by estimated cost, protein, time, and experimental text preferences.
+- Present budget-first, protein-first, kitchen-first and balanced options, including a Pareto trade-off view.
+- Inspect price-source and food-state caveats, historical survey scope and unvalidated preparation inputs.
+- Return **no eligible recommendation** when the evidence or constraints cannot support one.
 
-## Out of scope for the hackathon
+## Success measures to validate, not yet achieved
 
-Clinical nutrition advice, proven protein-quality equivalence, safety certification, regulatory approvals, consumer taste guarantees, large-scale recipe coverage, full production deployment or a proven commercial business model.
+- Record local dated quotations and actual ingredient purchasing units for each candidate.
+- Weigh purchased and finished portions; measure preparation time, fuel, oil and labour.
+- Match each real menu ingredient to the correct composition food state and food-specific allergen label.
+- Compare restaurant-reviewed choices against the cheapest feasible baseline, keyword scores and TF-IDF.
+- Demonstrate that an additional menu option can be prepared consistently and that operators find the recommendations useful.
 
-## Decisions to confirm
+**Out of scope at present:** guaranteed health outcomes, proven nutritional equivalence, food-safety certification, live national market prices, measured environmental impact, general generative-AI recipe creation, and commercial traction claims.
 
-- What counts as one serving and what cooking loss will be measured?
-- Is the budget purchase cost only or fully loaded price including energy/labour? (Current engine includes all.)
-- Which Nigerian supplier/locality is the initial price reference?
-- Is the AI experiment meaningful relative to a deterministic baseline?
-- Are pre-hackathon code/build activities permitted? Verify with organisers.
+Further detail: `docs/DATASET_INTAKE_AND_DIVERSIFICATION_2026-11-20.md`.

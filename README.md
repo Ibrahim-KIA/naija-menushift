@@ -2,9 +2,9 @@
 
 **Hack the Fork Nigeria 2026 · Challenge 2 · Team research prototype**
 
-A reusable, evidence-aware decision-support tool for Nigerian restaurant teams exploring plant-based alternatives to familiar menu items. **Suya is the first demonstration, not the product's permanent scope.** A second experimental menu context now compares the **plant-protein side for jollof**; rice, sauce and original chicken are NOT modelled. Egusi, meat pie and pepper soup remain research candidates.
+A reusable, evidence-aware decision-support tool for Nigerian restaurant teams **diversifying existing menus** with additional plant-based choices, without requiring them to discontinue conventional offerings. **Suya is the first demonstration, not the product's permanent scope.** A second experimental menu context now compares the **plant-protein side for jollof**; rice, sauce and original chicken are NOT modelled. Egusi, meat pie and pepper soup remain research candidates.
 
-> **IMPORTANT: The default dataset is completely SYNTHETIC.** Every demonstration price, nutrient value, recipe weight, energy charge, preparation time and resulting ranking is fictional. Never quote these values as actual Nigerian prices, measured nutritional content, or tested restaurant recommendations. The empty `data/verified/` templates intentionally refuse to run until the team fills and sources them.
+> **IMPORTANT: Different evidence levels are deliberately separated.** The CLI/demo fixtures in `data/demo/` are fully synthetic. The Research and Kitchen Studios currently use historical published price and generic nutrient references, combined with **unmeasured** serving yields, recipe quantities and preparation assumptions; these are not validated meals or live supplier quotes. The new read-only Evidence Library presents selected FAO/USDA composition references and WFP Borno/Yobe price aggregates, but does **not** feed them directly into recipe rankings. The `data/verified/` tables remain empty pending measured local evidence.
 
 ## What it does now
 
@@ -30,14 +30,14 @@ python -m pip install -e '.[dev]'
 streamlit run app.py
 ```
 
-The web UI opens with **Synthetic demonstration** mode. A verified mode exists but fails closed until Amina and team have supplied the required sourced data.
+The web UI offers the **Research Studio**, **Kitchen Intelligence Studio** and a new **Evidence Library**. It is a research prototype, not a verified restaurant menu-pricing system. Run `menushift` from the CLI for synthetic fixtures and reproducible test scenarios.
 
 Run calculations without a browser:
 
 ```bash
 menushift --dish suya --budget 1500 --protein 10 --sensitivity
 pytest -q
-ruff check src tests app.py
+ruff check src tests pages app.py
 ```
 
 ## Team workstreams
@@ -53,9 +53,9 @@ See [CONTRIBUTORS.md](CONTRIBUTORS.md), [TASKS.md](docs/TASKS.md) and [CONTRIBUT
 ## Directory map
 
 ```text
-app.py                    Streamlit demonstration
+app.py                    Streamlit Research Studio\npages/                    Kitchen Intelligence and read-only Evidence Library
 src/menushift/            Generic domain engine and CLI
-data/demo/                SYNTHETIC illustrative test rows
+data/demo/                SYNTHETIC illustrative test rows\ndata/curated/             FAO/USDA references and regional WFP price snapshots (not approved recipes)
 data/verified/            Empty templates for sourced research
 tests/                    Automated guardrails
 .github/workflows/ci.yml  Tests and lint on push/PR
@@ -91,4 +91,4 @@ The private repository was created by the owner and collaboration invitations ha
 - [Challenge 2 Meeting Presentation (Google Slides)](https://docs.google.com/presentation/d/1vdc8KmijvfRY0up1j2Ysf8Gq9DrPvyfiMyftqqGKqmg/edit)
 - [Hack the Fork project Drive folder](https://drive.google.com/drive/folders/18NG81Tng8uTgh-oHvWAYKd2WAKUS6GOr)
 
-Older presentation material lists five dishes as research candidates, not finished app features. Team WhatsApp discussions narrow the first technical pilot to four tofu preparations plus beef reference; that does **not** replace the broader product goal.
+Older presentation material lists additional dishes as research candidates, not completed menu innovations. Suya remains the primary numerical pilot, and the jollof example currently covers only a possible plant-protein accompaniment. This is **menu diversification**, not a proposal to remove existing dishes.

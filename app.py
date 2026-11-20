@@ -68,15 +68,16 @@ def _apply(updates: dict) -> None:
 st.caption("HACK THE FORK NIGERIA 2026 · CHALLENGE 2")
 st.title("Naija MenuShift")
 st.page_link("pages/1_Kitchen_Intelligence.py", label="Explore the Kitchen Intelligence Studio", icon="🌿")
-st.caption("New: ingredient-aware formulation exploration and equipment-constrained alternatives.")
-st.write("Compare plant-protein alternatives for familiar Nigerian meals using traceable research figures.")
+st.page_link("pages/2_Evidence_Library.py", label="Inspect the Evidence Library", icon="📚")
+st.caption("Expand menus with additional plant-based choices, without removing existing favourites.")
+st.write("Diversify familiar Nigerian menus with additional plant-based options, transparent estimates and clear preparation constraints.")
 st.warning(
     "Prices and per-100 g nutrients come from those sources. Finished weight, soy yield, "
     "prep minutes, oil, and spices are controls, because the workbook has no measured serving.",
     icon="⚠️",
 )
 
-st.subheader("1. Choose a dish")
+st.subheader("1. Choose a menu to diversify")
 dish_id = st.selectbox(
     "Current restaurant menu item", list(DISH_LABELS),
     format_func=lambda item: DISH_LABELS[item],

@@ -1,0 +1,49 @@
+{
+  "archive": "MenuShift Datasets Pack.zip",
+  "supplied_by": "Muhammad Inuwa",
+  "reviewed_on": "2026-11-20",
+  "archive_sha256": "2847e89b085e4e056fca17ccc6db7aadfcc4c03c90117c7bc68cc0d81e1a716c",
+  "nutrition_reference_rows": 15,
+  "historical_wfp_snapshots": 28,
+  "sources": [
+    {
+      "key": "FAO",
+      "input": "WAFCT_2019.xlsx",
+      "status": "curated reference only",
+      "url": "https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en"
+    },
+    {
+      "key": "USDA",
+      "input": "usda_relevant_foods.csv",
+      "status": "curated reference only",
+      "url": "https://fdc.nal.usda.gov/"
+    },
+    {
+      "key": "WFP",
+      "input": "wfp_food_prices_nigeria.csv",
+      "status": "regional historical aggregate only",
+      "url": "https://data.humdata.org/dataset/wfp-food-prices-for-nigeria"
+    },
+    {
+      "key": "NBS",
+      "input": "Selected_Food_Report_May2026.zip",
+      "status": "existing project NBS historical references retained; no new prices activated",
+      "url": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162"
+    },
+    {
+      "key": "HESTIA",
+      "input": "impacts_2026-04-30.parquet",
+      "status": "environmental life-cycle metrics withheld until comparable units and boundaries",
+      "url": "https://registry.opendata.aws/hestia/"
+    },
+    {
+      "key": "Open Food Facts",
+      "input": "off_nigeria_products.csv",
+      "status": "withheld pending verification and ODbL reuse assessment",
+      "url": "https://world.openfoodfacts.org/data"
+    }
+  ],
+  "auto_promote_to_recommendations": false,
+  "approved_finished_recipes": 0,
+  "notes": "Curated rows are selected excerpts with exact food states and retained historic scope. Original ZIP is not committed."
+}

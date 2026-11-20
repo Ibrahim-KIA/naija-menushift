@@ -73,10 +73,10 @@ st.markdown(
     """
 <section class="ms-hero" aria-label="Kitchen Intelligence Studio introduction">
   <div class="ms-eyebrow">Naija MenuShift · Hack the Fork Nigeria · Challenge 2</div>
-  <h1>Better food ideas.<br>Real kitchen decisions.</h1>
-  <p>Explore plant-based formulations for familiar Nigerian meals with clear
-  ingredient estimates, budget checks, practical equipment constraints and
-  honest evidence trails.</p>
+  <h1>More menu choices.<br>Better kitchen decisions.</h1>
+  <p>Diversify familiar Nigerian menus with additional plant-based choices,
+  ingredient estimates, budget checks, equipment-aware planning and
+  transparent evidence. Existing dishes remain on the menu.</p>
   <div class="ms-hero-tags"><span>Recipe exploration</span>
   <span>Cost & protein trade-offs</span><span>Source transparency</span></div>
 </section>
@@ -96,13 +96,14 @@ st.warning(
 )
 
 st.markdown('<div class="ms-section">01 · Restaurant brief</div>', unsafe_allow_html=True)
-st.subheader("What would you like to reinvent?")
+st.subheader("Which menu would you like to diversify?")
 dish_id = st.selectbox(
     "Existing menu dish", list(DISH_LABELS),
     format_func=lambda code: DISH_LABELS[code],
     help="Suya is the primary pilot; jollof is a protein-side exploration only.",
 )
 st.caption(DISH_SCOPE[dish_id])
+st.page_link("pages/2_Evidence_Library.py", label="View supporting food and market evidence", icon="📚")
 if dish_id == "jollof_side":
     st.warning(
         "PARTIAL menu adaptation: these figures cover the proposed plant-protein accompaniment "

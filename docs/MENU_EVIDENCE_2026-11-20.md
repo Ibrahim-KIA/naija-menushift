@@ -1,9 +1,8 @@
 # Menu evidence release and validation plan — 20 November 2026
 
-## Honest scope
-Naija MenuShift now has two distinct selectable contexts:
+**Product framing:** Naija MenuShift helps restaurants diversify menus with additional plant-based choices alongside their existing offerings. It is not a programme to remove or replace conventional dishes.\n\n## Honest scope\nNaija MenuShift now has two distinct selectable contexts:
 1. **Suya**: plant-based awara/tofu method comparison, from historical price and generic nutrition references. Beef is only an imperfect raw-price / cooked-nutrition reference.
-2. **Jollof with a plant-based protein side**: separate dish ID using the same sourced awara methods to demonstrate reusable constraints. **Only the proposed protein-side ingredient cost and nutrients are shown**. Rice, sauce, original chicken, full meal weights and additional kitchen costs are **not** included. This is a partial exploratory substitution, not a validated jollof recipe.
+2. **Jollof with a plant-based protein side**: separate dish ID using the same sourced awara methods to demonstrate reusable constraints. **Only the proposed protein-side ingredient cost and nutrients are shown**. Rice, sauce, original chicken, full meal weights and additional kitchen costs are **not** included. This is a partial exploratory **additional accompaniment**, not a validated complete jollof recipe.
 
 Both depend on assumptions for purchased/finished tofu yield, recipe mass, preparation time, oil and fuel. No verified cooking trials have been added, and `data/verified/` stays empty.
 

@@ -1,18 +1,25 @@
-# Demo and pitch guide (readable talk track)
+# Naija MenuShift — jury-ready menu diversification talk track
 
-“Our project, Naija MenuShift, is an evidence-aware decision-support tool for Nigerian restaurants exploring plant-based alternatives to familiar menu items. Suya is our first demonstration, not the only dish the system will support.
+“Our goal is to help Nigerian restaurants diversify their menus with **additional plant-based options**, without asking them to stop serving traditional dishes.
 
-We let a restaurant owner choose a dish, set a maximum serving cost and a minimum estimated protein requirement, and compare plausible plant alternatives. For suya, we are starting with four tofu preparation approaches. Beef suya is displayed only as a conventional reference.
+Naija MenuShift is an explainable decision-support prototype. A restaurant chooses an existing menu context and its constraints: maximum cost, minimum estimated protein, preparation time, equipment and dietary restrictions. We show possible additional preparations, eliminate options that fail those rules and explain why remaining candidates may be worth a kitchen trial.
 
-The tool calculates purchase and preparation costs, estimates nutrients from supplied sources, excludes options that fail constraints, and explains the remaining recommendations. It also shows the cheapest-only baseline and how rankings respond when ingredient prices rise or fall by 20 percent.
+Suya is our first working numerical case, comparing four awara preparation methods while keeping conventional beef suya as a separate reference. We also show a preliminary jollof protein-side example, explicitly excluding the cost and nutrition of rice, sauce and the original chicken. We don't present that as a complete or validated meal.
 
-An important distinction: the sample demonstration data are **fictional**. We need dated local prices, real ingredient composition entries and kitchen trials before making customer claims. We also still need to measure whether our NLP/ranking component performs better than simpler baselines. Our goal is an honest, testable recommendation method that can later cover additional Nigerian dishes.”
+Our tool ranks eligible candidates with transparent criteria and experimental TF-IDF preference matching, then compares them to simpler cheapest-feasible choices. The Kitchen Studio also shows cost-first, protein-first and time-first possibilities and Pareto trade-offs.
 
-## Suggested live click-through
+The new Evidence Library provides traceable FAO and USDA reference nutrients and WFP regional historical market snapshots. These are **not live supplier prices** and do not automatically become approved recipe data. We still need real kitchen measurements and independent food-practitioner reviews before saying a proposed menu addition is ready for sale.
 
-1. Open Streamlit in Synthetic demonstration mode; read the warning aloud.
-2. Choose suya, show all four plant options and the beef reference.
-3. Tighten budget/protein requirement until the app shows *no feasible option*.
-4. Relax requirements and demonstrate ranking and explanations.
-5. Change preference or apply +20% price shock; inspect differences.
-6. Explain source-data limitations and the planned transition to verified numbers.
+We're building more choices for Nigerian menus, supported by transparent reasoning and clear evidence limits.”
+
+## Suggested live demonstration
+
+1. Open the Streamlit Research Studio and state the unmeasured recipe limitations.
+2. Choose **suya** and enter a restaurant budget and protein preference.
+3. Show feasible options, the hard-filter explanation, budget/protein/time trade-offs and beef as a separate reference.
+4. Open **Kitchen Intelligence** to inspect equipment limits, serving-size assumptions and Pareto choices.
+5. Show the **jollof protein-side** selector while explicitly acknowledging it is a partial exploratory option.
+6. Open **Evidence Library** and select WFP Borno November 2026 rice or cowpea historical price. Explain market region, date and package-unit conversion; show FAO boiled cowpea versus raw cowpea for nutritional food-state importance.
+7. Finish with what still needs evidence: local price quotations, kitchen yields, energy costs, allergen checks, independent restaurant evaluation.
+
+Avoid: "we replace beef", "the AI guarantees taste", "verified live prices", "complete jollof nutrition" or "Vchunks-equivalent protein" without actual evidence.
