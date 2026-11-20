@@ -1,6 +1,9 @@
 """Bedrock research advisor is opt-in, schema-bound and cannot override constraints."""
 import json
+import sys
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 from menushift.bedrock_advisor import advice_from_client, advice_from_workshop
 from menushift.kitchen_optimizer import explore
@@ -54,6 +57,8 @@ def test_candidate_selection_is_bounded_and_only_uses_feasible_option_ids():
     prompt = f.calls[0]["messages"][0]["content"][0]["text"]
     payload = json.loads(prompt)
     assert payload["constraints_already_checked"] is True
+    assert all(isinstance(item["nutrition_reference_complete"], bool)
+               for item in payload["eligible_candidates"])
     assert all(item["candidate_id"] in {r.identifier for r in s.eligible}
                for item in payload["eligible_candidates"])
 
@@ -120,11 +125,12 @@ def test_optional_aws_features_never_invoke_without_valid_config():
 def test_guardrail_intervention_and_cloud_failures_never_replace_deterministic_ranking():
     s = search()
     selected = s.eligible[0].identifier
-    block = FakeClient({"choices": [{"candidate_id": selected, "review_focus": "texture_trial"}]},
-                       stop_reason="guardrail_intervened")
-    assert advice_from_client(s, client=block, model_id="workshop-model",
-                              preference="").status == "unavailable"
-    broken = FakeClient(error=RuntimeError("AWS account expired"))
+    for stop_reason in ("guardrail_intervened", "content_filtered", "max_tokens"):
+        block = FakeClient({"choices": [{"candidate_id": selected, "review_focus": "texture_trial"}]},
+                           stop_reason=stop_reason)
+        assert advice_from_client(s, client=block, model_id="workshop-model",
+                                  preference="").status == "unavailable"
+    broken = FakeClient(error=TimeoutError("AWS read timed out"))
     assert advice_from_client(s, client=broken, model_id="workshop-model",
                               preference="").status == "unavailable"
 
@@ -134,3 +140,28 @@ def test_workshop_mode_disabled_without_model_setting(monkeypatch):
     result = advice_from_workshop(search(), preference="")
     assert result.status == "disabled"
     assert result.model_used is False
+
+
+
+def test_workshop_caps_attempts_and_handles_sdk_setup_failure(monkeypatch):
+    monkeypatch.setenv("MENUSHIFT_BEDROCK_MODEL_ID", "workshop-model")
+    config = Mock()
+    factory = Mock(side_effect=RuntimeError("SDK initialization failed"))
+    monkeypatch.setitem(sys.modules, "boto3", SimpleNamespace(client=factory))
+    monkeypatch.setitem(sys.modules, "botocore.config", SimpleNamespace(Config=config))
+
+    excluded = advice_from_workshop(search(avoid_allergens=("soy",)), preference="")
+    assert excluded.status == "no_eligible_candidates"
+    factory.assert_not_called()
+
+    exploration = search()
+    baseline = exploration.best("balanced")
+    result = advice_from_workshop(exploration, preference="")
+    assert result.status == "unavailable"
+    assert not result.choices and not result.model_used
+    assert exploration.best("balanced") == baseline
+    config.assert_called_once_with(
+        connect_timeout=3, read_timeout=12,
+        retries={"total_max_attempts": 1, "mode": "standard"},
+    )
+    factory.assert_called_once_with("bedrock-runtime", region_name="us-east-1", config=config.return_value)

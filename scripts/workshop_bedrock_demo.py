@@ -1,7 +1,7 @@
 """Run explicitly in the authorised AWS workshop terminal, never in CI.
 
 Requires boto3 and MENUSHIFT_BEDROCK_MODEL_ID set for the workshop account.
-Prints ONLY model choice IDs / fixed review questions. No credentials are printed.
+Prints candidate IDs, deterministic baselines and fixed review questions. No credentials are printed.
 """
 from __future__ import annotations
 
@@ -26,6 +26,8 @@ def main() -> None:
         avoid_allergens=(),
         seasoning_g=0,
     )
+    balanced = s.best("balanced")
+    cheapest = s.best("budget")
     result = advice_from_workshop(s, preference="chewy and practical")
     print(json.dumps({
         "status": result.status,
@@ -34,6 +36,9 @@ def main() -> None:
         "suggestions": [asdict(item) for item in result.choices],
         "note": result.message,
         "eligible_option_count": len(s.eligible),
+        "eligible_candidate_ids": [item.identifier for item in s.eligible],
+        "deterministic_balanced_id": balanced.identifier if balanced else None,
+        "cheapest_feasible_id": cheapest.identifier if cheapest else None,
     }, indent=2))
 
 
