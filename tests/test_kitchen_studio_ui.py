@@ -14,7 +14,7 @@ def launch():
 
 def test_kitchen_studio_renders_clear_restaurant_fields():
     app = launch()
-    assert any("What would you like to reinvent?" in h.value for h in app.subheader)
+    assert any("Which menu would you like to diversify?" in h.value for h in app.subheader)
     assert any("Maximum estimated cost" in x.label for x in app.number_input)
     assert any("Minimum estimated protein" in x.label for x in app.number_input)
     assert any("What equipment is available?" == x.label for x in app.multiselect)
