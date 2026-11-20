@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 from menushift.kitchen_optimizer import explore
+from menushift.menu_pilots import DISH_LABELS, DISH_SCOPE
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "data" / "sources"
@@ -96,13 +97,17 @@ st.warning(
 
 st.markdown('<div class="ms-section">01 · Restaurant brief</div>', unsafe_allow_html=True)
 st.subheader("What would you like to reinvent?")
-st.selectbox(
-    "Existing menu dish",
-    ["suya"],
-    format_func=lambda _: "Nigerian suya — plant-based adaptation",
-    help="Suya is the evaluated pilot. Other Nigerian dishes require additional recipe evidence.",
+dish_id = st.selectbox(
+    "Existing menu dish", list(DISH_LABELS),
+    format_func=lambda code: DISH_LABELS[code],
+    help="Suya is the primary pilot; jollof is a protein-side exploration only.",
 )
-st.caption("Starting with one properly tested dish. More meals can be added through the existing recipe schema.")
+st.caption(DISH_SCOPE[dish_id])
+if dish_id == "jollof_side":
+    st.warning(
+        "PARTIAL menu adaptation: these figures cover the proposed plant-protein accompaniment "
+        "ONLY. Rice, sauce, chicken baseline, whole-meal cost and nutrition are not included."
+    )
 
 with st.container(border=True):
     st.markdown("### 02 · Your constraints")
@@ -172,6 +177,7 @@ with st.container(border=True):
 try:
     search = explore(
         SOURCES,
+        dish_id=dish_id,
         budget_ngn=budget,
         protein_target_g=protein,
         max_prep_minutes=max_time,
@@ -191,6 +197,8 @@ except (ValueError, OSError, RuntimeError) as exc:
 
 st.markdown('<div class="ms-section">03 · Formulation exploration</div>', unsafe_allow_html=True)
 st.subheader("Find a formulation that fits your kitchen")
+if dish_id == "jollof_side":
+    st.caption("Estimated plant-protein accompaniment ONLY — not a complete jollof meal.")
 a, b, c = st.columns(3)
 a.metric("Candidates evaluated", f"{search.inspected}")
 b.metric("Within hard limits", f"{len(search.eligible)}")
@@ -327,6 +335,17 @@ else:
             "Any difference here is not proof of superiority. Independent kitchen "
             "review and out-of-sample benchmark scenarios remain necessary."
         )
+
+with st.expander("Vchunks competitor and transformation evidence"):
+    st.write(
+        "VeggieVictory lists 150 g packaged Vchunks at ₦4,500 and a prepared "
+        "Vchunks suya menu item at ₦2,000 (checked 20 Nov 2026). These are "
+        "different units; neither is a comparable cooked-serving cost. "
+        "The complete current nutrient label and measured yield remain unverified."
+    )
+    st.link_button("Vchunks product listing", "https://veggievictory.com/product/vchunks-plant-based-meat/")
+    st.link_button("Prepared Vchunks suya", "https://veggievictory.com/product/vchunks-suya/")
+    st.warning("No independently reviewed kitchen trials recorded. The source and mass-balance template is in data/evaluation/kitchen_trials.csv.")
 
 with st.expander("What this system can and cannot conclude"):
     st.markdown(
