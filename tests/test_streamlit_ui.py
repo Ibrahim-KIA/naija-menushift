@@ -33,7 +33,7 @@ def test_low_budget_abstains_without_recommending_beef():
     at = _run()
     at.number_input(key="budget").set_value(20.0).run()
     assert not at.exception
-    assert any("No awara option" in err.value for err in at.error)
+    assert any("No plant-protein option" in err.value for err in at.error)
     assert not at.success
 
 
@@ -41,7 +41,7 @@ def test_soy_exclusion_removes_every_awara_option():
     at = _run()
     at.multiselect(key="avoid").set_value(["soy"]).run()
     assert not at.exception
-    assert any("No awara option" in err.value for err in at.error)
+    assert any("No plant-protein option" in err.value for err in at.error)
 
 
 def test_high_protein_target_drops_the_firm_option():
@@ -53,3 +53,15 @@ def test_high_protein_target_drops_the_firm_option():
     pressed = status[status["Alternative"].astype(str).str.startswith("Pressed")].iloc[0]
     assert firm["Status"] == "Excluded"
     assert pressed["Status"] == "Eligible"
+
+
+def test_jollof_context_reuses_constraints_and_discloses_partial_scope():
+    at = _run()
+    menu = next(box for box in at.selectbox if box.label == "Current restaurant menu item")
+    menu.set_value("jollof_side").run()
+    assert not at.exception
+    assert any("PARTIAL transformation" in w.value for w in at.warning)
+    assert at.success
+    all_prices = " ".join(frame.value.to_csv() for frame in at.dataframe)
+    assert "awara" in all_prices.lower()
+    assert not any("chicken" in h.value.lower() for h in at.subheader)
