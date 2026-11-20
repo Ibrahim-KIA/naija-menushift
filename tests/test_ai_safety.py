@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from menushift.engine import Dataset, evaluate, load_dataset, validate_dataset
+from menushift.engine import Dataset, evaluate, validate_dataset
 from menushift.safety import (
     read_allergen_labels,
     validate_exclusions,
