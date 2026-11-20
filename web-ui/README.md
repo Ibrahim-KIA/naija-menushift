@@ -173,3 +173,19 @@ lib/
   reason. ₦40 budget → 0 eligible. Grill-only equipment → only firm awara,
   9 equipment exclusions. Invalid portion / equipment / price-shock → HTTP 400
   with the Python validation messages.
+
+## Parallel Vercel prototype and restrictions (20 November 2026)
+
+This is a suya-focused **separate synthetic demonstration**, not the full Python
+Streamlit research application. The original Streamlit app remains authoritative
+for multi-dish research, the Evidence Library and Python safety checks.
+
+The Vercel server accepts only JSON briefs with known keys and <=12 KB bodies;
+unknown allergen exclusions fail rather than being ignored. Soy, groundnut and
+wheat aliases are canonicalised. Compound seasoning with unreviewed animal origin
+cannot qualify for a plant-only recommendation. A hard filter always comes before
+ranking. This is not food-safety certification or a live market quote.
+
+No AWS Bedrock integration or paid model calls are enabled. Next.js is pinned to
+15.5.29, the November 2026 patched maintenance release. Vercel Hobby is for
+eligible personal non-commercial demonstration use, not commercial service.

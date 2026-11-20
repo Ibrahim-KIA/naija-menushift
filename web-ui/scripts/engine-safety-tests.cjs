@@ -1,0 +1,16 @@
+const assert = require("node:assert/strict");
+const e = require("../.test-build/engine.js");
+const base = { ...e.DEFAULT_BRIEF, portionsG:[100] };
+const normal = e.exploreLocal(base);
+assert.equal(normal.inspected, 4);
+assert.ok(normal.eligibleIds.length>0);
+const rejected = (changes) => e.exploreLocal({ ...base,...changes });
+assert.equal(rejected({avoidAllergens:["soya"]}).eligibleIds.length,0);
+assert.equal(rejected({avoidAllergens:["groundnuts"]}).eligibleIds.length,0);
+assert.equal(rejected({seasoningG:2}).eligibleIds.length,0);
+assert.equal(rejected({budgetNgn:1}).eligibleIds.length,0);
+assert.throws(()=>rejected({avoidAllergens:["mustard"]}),/Unsupported allergen/);
+assert.throws(()=>rejected({budgetNgn:"1500"}),/finite/);
+assert.ok(normal.reference.length>0);
+assert.equal(normal.candidates.some(c=>c.method==="Beef" && c.feasible),false);
+console.log("Standalone Vercel research-engine safety checks passed");

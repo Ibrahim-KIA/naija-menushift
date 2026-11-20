@@ -7,8 +7,9 @@ export default function HomePage() {
       <header className="ns-header">
         <p className="ns-wordmark">Naija MenuShift</p>
         <p className="ns-header-sub">
-          Kitchen Intelligence Studio · Hack the Fork Nigeria 2026 · Challenge 2
+          Vercel interface demo · Hack the Fork Nigeria 2026 · Challenge 2
         </p>
+        <p><a href="https://naija-menushift.streamlit.app/" rel="noopener noreferrer">Open the complete Streamlit research application</a></p>
       </header>
 
       <section className="ns-hero">
@@ -19,8 +20,8 @@ export default function HomePage() {
           costs, your protein target, your time, your equipment and your stock.
         </p>
         <div className="ns-warning" role="note">
-          <strong>Research warning:</strong> this is a research prototype. Prices and
-          nutrients are research estimates from cited sources, not verified market
+          <strong>Research warning:</strong> this is a separate suya-focused synthetic demonstration, not the complete Python-backed multi-dish research application. Prices and
+          nutrients are illustrative estimates from reference data, not verified market
           measurements, and no output is approved for food service. Unreviewed data is
           labelled at the point of decision.
         </div>

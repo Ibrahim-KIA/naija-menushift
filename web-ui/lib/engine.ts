@@ -158,6 +158,18 @@ export interface ExploreResult {
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const round5 = (n: number) => Math.round(n * 100000) / 100000;
 
+const ALLERGEN_ALIASES: Record<string, string> = {
+  soya: "soy", soybean: "soy", soybeans: "soy", groundnut: "peanut",
+  groundnuts: "peanut", peanuts: "peanut", gluten: "wheat",
+  "wheat gluten": "wheat", dairy: "milk", casein: "milk",
+};
+const SUPPORTED_ALLERGENS = new Set([
+  "soy", "peanut", "wheat", "milk", "egg", "sesame", "tree nut", "fish", "shellfish",
+]);
+function canonicalAllergen(text: string): string {
+  const normalized = text.trim().toLowerCase().replace(/[_-]/g, " ").replace(/\s+/g, " ");
+  return ALLERGEN_ALIASES[normalized] ?? normalized;
+}
 const UNCLEAR_ALLERGEN_LABELS = new Set([
   "unknown",
   "verify label",
@@ -171,13 +183,15 @@ function allergenInfo(allergenField: string): { labels: Set<string>; unreviewed:
   const labels = new Set(
     allergenField
       .split(";")
-      .map((p) => p.trim().toLowerCase())
+      .map((p) => canonicalAllergen(p))
       .filter(Boolean),
   );
   const unreviewed =
-    labels.size === 0 || [...labels].some((l) => UNCLEAR_ALLERGEN_LABELS.has(l));
+    labels.size === 0 || [...labels].some((l) =>
+      UNCLEAR_ALLERGEN_LABELS.has(l) || (l !== "none" && !SUPPORTED_ALLERGENS.has(l))
+    ) || (labels.has("none") && labels.size > 1);
   for (const l of [...labels]) {
-    if (UNCLEAR_ALLERGEN_LABELS.has(l) || l === "none") labels.delete(l);
+    if (UNCLEAR_ALLERGEN_LABELS.has(l) || l === "none" || !SUPPORTED_ALLERGENS.has(l)) labels.delete(l);
   }
   return { labels, unreviewed };
 }
@@ -268,12 +282,25 @@ export function validateBrief(brief: Brief): void {
   if (brief.priceShock < -0.2 || brief.priceShock > 0.2) {
     throw new Error("Price scenario must be between -20% and +20%");
   }
-  if (brief.preference.length > 200) {
+  if (typeof brief.preference !== "string" || brief.preference.length > 200) {
     throw new Error("Preference cannot exceed 200 characters");
+  }
+  if (!Array.isArray(brief.avoidAllergens) || brief.avoidAllergens.length > 10 ||
+      brief.avoidAllergens.some((x) => typeof x !== "string" || !SUPPORTED_ALLERGENS.has(canonicalAllergen(x)))) {
+    throw new Error("Unsupported allergen exclusion: request an ingredient-label review instead");
+  }
+  if (!Array.isArray(brief.equipment) || brief.equipment.length > 12 ||
+      brief.equipment.some((x) => typeof x !== "string")) {
+    throw new Error("Equipment must be a supported list");
+  }
+  if (brief.availableIngredients !== null &&
+      (!Array.isArray(brief.availableIngredients) || brief.availableIngredients.length > 20 ||
+       brief.availableIngredients.some((x) => typeof x !== "string"))) {
+    throw new Error("Ingredient inventory must be a supported list");
   }
   const portions = brief.portionsG;
   if (
-    !portions ||
+    !Array.isArray(portions) ||
     portions.length === 0 ||
     portions.length > 20 ||
     new Set(portions).size !== portions.length
@@ -385,7 +412,7 @@ interface Evaluation {
 }
 
 function evaluateOptions(options: BuiltOption[], brief: Brief): Evaluation[] {
-  const avoid = brief.avoidAllergens.map((a) => a.trim().toLowerCase());
+  const avoid = brief.avoidAllergens.map(canonicalAllergen);
   const plantTexts = options.filter((o) => o.group === "plant").map((o) => o.text);
   const textScores = tfidfScores(plantTexts, brief.preference);
   const textByOption = new Map<string, number>();
@@ -438,8 +465,10 @@ function evaluateOptions(options: BuiltOption[], brief: Brief): Evaluation[] {
     const timely = option.prepMinutes <= brief.maxPrepMinutes;
     const conflicts = avoid.filter((a) => allergenSet.has(a)).sort();
     const unknownStatus = avoid.length > 0 && anyUnreviewed;
-    const feasible =
-      plant && affordable && enough && timely && conflicts.length === 0 && !unknownStatus;
+    // Compound seasoning has no reviewed animal-origin declaration.
+    const unknownAnimalOrigin = plant && option.lines.some((l) => l.ingredientId === "seasoning");
+    const feasible = plant && affordable && enough && timely &&
+      conflicts.length === 0 && !unknownStatus && !unknownAnimalOrigin;
 
     const reasons: string[] = [];
     if (!plant) reasons.push("Beef/reference only; excluded from plant recommendations");
@@ -449,9 +478,9 @@ function evaluateOptions(options: BuiltOption[], brief: Brief): Evaluation[] {
     if (conflicts.length)
       reasons.push(`Excluded labeled allergen(s): ${conflicts.join(", ")}`);
     if (unknownStatus)
-      reasons.push(
-        "Cannot verify requested allergen exclusion; ingredient label review is incomplete",
-      );
+      reasons.push("Cannot verify allergen exclusion; ingredient label review is incomplete");
+    if (unknownAnimalOrigin)
+      reasons.push("Seasoning animal-origin declaration unreviewed; cannot confirm plant-only status");
 
     let score: number | null = null;
     let breakdown: ScorePart[] = [];
@@ -495,7 +524,7 @@ function evaluateOptions(options: BuiltOption[], brief: Brief): Evaluation[] {
 
 export function exploreLocal(brief: Brief): ExploreResult {
   validateBrief(brief);
-  const avoidLower = new Set(brief.avoidAllergens.map((a) => a.toLowerCase()));
+  const avoidLower = new Set(brief.avoidAllergens.map(canonicalAllergen));
 
   const candidates: Candidate[] = [];
   const reference: ReferenceEvaluation[] = [];
@@ -623,8 +652,8 @@ export function exploreLocal(brief: Brief): ExploreResult {
 
 /**
  * The single async entry point used by the UI. Posts the brief to
- * /api/explore, which runs the local engine tonight or proxies to the
- * AWS-hosted engine when MENUSHIFT_ENGINE_URL is configured server-side.
+ * /api/explore, which runs a bounded local research-only engine.
+ * No paid external LLM or unreviewed proxy is enabled.
  */
 export async function explore(brief: Brief): Promise<ExploreResult> {
   const res = await fetch("/api/explore", {
