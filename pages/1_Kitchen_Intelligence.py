@@ -103,7 +103,7 @@ dish_id = st.selectbox(
     help="Suya is the primary pilot; jollof is a protein-side exploration only.",
 )
 st.caption(DISH_SCOPE[dish_id])
-st.page_link("pages/2_Evidence_Library.py", label="View supporting food and market evidence", icon="📚")
+st.caption("For supporting food and market references, open Evidence Library from the app navigation.")
 if dish_id == "jollof_side":
     st.warning(
         "PARTIAL menu adaptation: these figures cover the proposed plant-protein accompaniment "
