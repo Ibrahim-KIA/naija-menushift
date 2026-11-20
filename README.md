@@ -20,6 +20,16 @@ A reusable, evidence-aware decision-support tool for Nigerian restaurant teams *
 
 **Not yet done:** credible local price collection, verified nutrient inputs, measured cooking yields, taste/texture evaluation, food-safety review, multi-dish recipes, and assessment showing statistical or practical value beyond a transparent rule-based baseline. The TF-IDF component is an *experimental NLP similarity signal*, not a taste model or validation of AI performance.
 
+## Optional AWS workshop research adviser
+
+An **opt-in, offline-tested** Bedrock Converse adapter is staged in
+`src/menushift/bedrock_advisor.py`. It only selects from candidates already
+marked feasible by the deterministic engine; all results remain provisional.
+No model calls occur during normal app use, tests or deployments. Workshop
+credentials are temporary and must not be added to public hosting. See
+[the workshop instructions](docs/AWS_WORKSHOP_BEDROCK_ADVISOR_2026-11-20.md).
+The AWS integration is **not** yet live or verified against the workshop account.
+
 ## Quick start (Python 3.11+)
 
 ```bash
