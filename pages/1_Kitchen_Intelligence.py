@@ -254,7 +254,7 @@ else:
     selected = indexed[chosen_id]
     info, recipe = st.columns([1, 1], gap="large")
     with info:
-        st.markdown("#### Why this candidate is eligible")
+        st.markdown("#### Why this candidate provisionally qualifies")
         st.write(
             f"Estimated ingredients: ₦{selected.evaluation.ingredient_cost_ngn:,.0f} · "
             f"Other listed preparation: ₦{selected.evaluation.processing_cost_ngn:,.0f}"
@@ -271,6 +271,8 @@ else:
                 "At least one ingredient label has not been reviewed. This is NOT "
                 "certified allergen-safe or ready to serve."
             )
+        for warning in selected.evaluation.evidence_warnings:
+            st.warning(warning)
         st.caption(
             "A score or calculated feasibility does not establish flavour, texture, "
             "nutritional equivalence, ingredient safety or restaurant approval."
