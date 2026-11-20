@@ -91,7 +91,7 @@ def load_wfp_price_snapshots(folder: Path = CURATED) -> list[dict[str, str]]:
         package_price = _number(row["median_ngn_per_reported_unit"], "package")
         if package_price <= 0:
             raise ValueError("Invalid price")
-        mass = re.fullmatch(r"(?:(\d+(?:\.\d+)?)\s*)?(KG|G)", row["original_unit"], re.I)
+        mass = re.fullmatch(r"(?:(\d+(?:\.\d+)?)\s*)?(KG|G)", row["original_unit"], re.IGNORECASE)
         per_kg = row["median_ngn_per_kg"]
         if mass:
             weight = float(mass.group(1) or "1") * (1 if mass.group(2).upper() == "KG" else .001)
