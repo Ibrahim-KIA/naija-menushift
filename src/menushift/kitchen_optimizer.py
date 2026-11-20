@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .engine import Evaluation, evaluate
-from .sourced_menu import build_sourced_menu
+from .menu_pilots import DISH_LABELS, build_menu_pilots
 
 EQUIPMENT_REQUIREMENTS = {
     "awara_firm": frozenset({"grill"}),
@@ -105,6 +105,7 @@ def explore(
     sources: str | Path,
     *,
     budget_ngn: float,
+    dish_id: str = "suya",
     protein_target_g: float,
     max_prep_minutes: float,
     equipment: frozenset[str],
@@ -126,6 +127,8 @@ def explore(
     oil absorption, processing costs, cooking time and nutrition retention
     still need actual kitchen measurements.
     """
+    if dish_id not in DISH_LABELS:
+        raise ValueError("Unsupported dish; use a documented pilot")
     amounts = (budget_ngn, protein_target_g, max_prep_minutes, wet_yield_kg_per_kg_dry, oil_cl,
                price_shock, onion_g, pepper_g, salt_g, seasoning_g)
     if any(not math.isfinite(float(n)) for n in amounts):
@@ -153,7 +156,7 @@ def explore(
     skipped = 0
     inspected = 0
     for portion in sorted(portions_g):
-        data = build_sourced_menu(
+        data = build_menu_pilots(
             sources, finished_g=float(portion),
             wet_yield_kg_per_kg_dry=wet_yield_kg_per_kg_dry,
             prep_minutes=prep_minutes,
@@ -173,7 +176,7 @@ def explore(
                 )
             )
         evaluated = evaluate(
-            data, "suya", budget_ngn=budget_ngn, protein_target_g=protein_target_g,
+            data, dish_id, budget_ngn=budget_ngn, protein_target_g=protein_target_g,
             max_prep_minutes=max_prep_minutes, preference=preference,
             avoid_allergens=avoid_allergens, price_shock=price_shock,
         )
@@ -181,13 +184,14 @@ def explore(
             if not result.plant_only:
                 continue
             inspected += 1
-            requirement = EQUIPMENT_REQUIREMENTS[result.option_id]
+            method_id = result.option_id.removeprefix("jollof_")
+            requirement = EQUIPMENT_REQUIREMENTS[method_id]
             if not requirement.issubset(equipment):
                 skipped += 1
                 continue
             found.append(RecipeCandidate(
                 identifier=f"{result.option_id}@{portion}g",
-                method=METHOD_LABELS[result.option_id],
+                method=METHOD_LABELS[method_id],
                 portion_g=float(portion),
                 evaluation=result,
                 ingredient_lines=tuple(recipe_items.get(result.option_id, [])),
