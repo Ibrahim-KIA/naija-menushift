@@ -2,7 +2,7 @@
 
 **Hack the Fork Nigeria 2026 · Challenge 2 · Team research prototype**
 
-A reusable, evidence-aware decision-support tool for Nigerian restaurant teams exploring plant-based alternatives to familiar menu items. **Suya is the first demonstration, not the product's permanent scope.** The data model already lists future candidate dishes (meat pie, egusi, jollof with chicken, pepper soup); their formulas and verified data have **not** yet been developed.
+A reusable, evidence-aware decision-support tool for Nigerian restaurant teams exploring plant-based alternatives to familiar menu items. **Suya is the first demonstration, not the product's permanent scope.** A second experimental menu context now compares the **plant-protein side for jollof**; rice, sauce and original chicken are NOT modelled. Egusi, meat pie and pepper soup remain research candidates.
 
 > **IMPORTANT: The default dataset is completely SYNTHETIC.** Every demonstration price, nutrient value, recipe weight, energy charge, preparation time and resulting ranking is fictional. Never quote these values as actual Nigerian prices, measured nutritional content, or tested restaurant recommendations. The empty `data/verified/` templates intentionally refuse to run until the team fills and sources them.
 
