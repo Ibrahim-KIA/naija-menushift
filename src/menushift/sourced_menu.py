@@ -33,7 +33,7 @@ def _date_for(period: str) -> tuple[str, str]:
         return "2026-05-31", "Nigeria national average"
     if period == "2026-04":
         return "2026-04-30", "Nigeria national average"
-    return "2026-11-14", "Workbook quote, city not recorded"
+    return "unknown", "Workbook quote: date and city not recorded"
 
 
 def _ingredient(
@@ -50,6 +50,7 @@ def _ingredient(
     nutrition_source: str,
     nutrition_state: str,
     allergens: str,
+    animal_origin_reviewed: bool = True,
 ) -> dict[str, str]:
     price_date, region = _date_for(period)
     return {
@@ -66,6 +67,7 @@ def _ingredient(
         "nutrition_source": nutrition_source,
         "nutrition_state": nutrition_state,
         "allergens": allergens,
+        "animal_origin_reviewed": "true" if animal_origin_reviewed else "false",
     }
 
 
@@ -194,6 +196,7 @@ def build_sourced_menu(
             nutrition_source="no nutrient row in the workbook",
             nutrition_state="price only",
             allergens="unknown;verify label",
+            animal_origin_reviewed=False,  # compound seasoning lacks verified ingredients
         ),
         _ingredient(
             "beef",
