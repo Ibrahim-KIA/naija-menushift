@@ -12,11 +12,12 @@ const examples = [
 ] as const;
 
 type Example = (typeof examples)[number];
-type Run = { result: ExploreResult; brief: Brief; rice: boolean; example: Example };
-const stepLabels = ["Choose a meal", "Set requirements", "Review options"] as const;
+type Run = { result: ExploreResult; brief: Brief; rice: boolean; example: Example; dietaryReview: string };
+const stepLabels = ["Choose a meal", "Set requirements", "Read your recipe"] as const;
 
 export default function Studio() {
   const [example, setExample] = useState<Example>(examples[0]);
+  const [dietaryReview, setDietaryReview] = useState("");
   const [rice, setRice] = useState(false);
   const [brief, setBrief] = useState<Brief>(DEFAULT_BRIEF);
   const [step, setStep] = useState(0);
@@ -51,7 +52,7 @@ export default function Studio() {
     goTo(2);
     try {
       const result = await explore(brief);
-      setRun({ result, brief, rice, example });
+      setRun({ result, brief, rice, example, dietaryReview: example.id === "hospital" ? dietaryReview : "" });
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "The request failed. Try again.");
     } finally {
@@ -112,9 +113,24 @@ export default function Studio() {
         {step === 1 && (
           <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
             <p className="studio-scope">{example.name} · {rice ? "Suya with rice" : "Suya"} · Limits apply to the suya portion</p>
-            <KitchenRequirements brief={brief} patch={patch} />
+            <KitchenRequirements key={example.id} brief={brief} patch={patch} />
+            {example.id === "hospital" && (
+              <fieldset className="recipe-dietary">
+                <legend>Hospital catering · dietary review</legend>
+                <label className="ns-field">
+                  <span className="ns-label">Meal review requirement</span>
+                  <select value={dietaryReview} onChange={(event) => setDietaryReview(event.target.value)}>
+                    <option value="">General catering</option>
+                    <option value="Sodium review requested">Sodium review requested</option>
+                    <option value="Texture review requested">Texture review requested</option>
+                    <option value="Dietitian review requested">Dietitian review requested</option>
+                  </select>
+                </label>
+                <p className="ns-note">Use the protein and allergen fields above for kitchen requirements. The review selection stays on this page. Enter no names, patient records or diagnoses. A qualified reviewer must confirm therapeutic meals.</p>
+              </fieldset>
+            )}
             <div className="studio-actions">
-              <button type="submit" className="studio-primary">Find plant-based options <span aria-hidden="true">→</span></button>
+              <button type="submit" className="studio-primary">Find my trial recipe <span aria-hidden="true">→</span></button>
               <button className="studio-secondary" type="button" onClick={() => { setBrief({ ...DEFAULT_BRIEF, maxPrepMinutes: example.time }); setRun(null); }}>Reset requirements</button>
             </div>
           </form>
@@ -131,7 +147,7 @@ export default function Studio() {
             <button className="studio-secondary" onClick={() => void submit()}>Try again</button>
           </div>
         )}
-        {step === 2 && run && <RecommendationResults result={run.result} brief={run.brief} rice={run.rice} servings={run.example.servings} />}
+        {step === 2 && run && <RecommendationResults result={run.result} brief={run.brief} rice={run.rice} servings={run.example.servings} dietaryReview={run.dietaryReview} />}
       </div>
     </div>
   );

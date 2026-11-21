@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { Brief, Candidate, ExploreResult } from "@/lib/engine";
 import { DATASET_NOTE } from "@/lib/data";
 import CandidateDetail, { money } from "./CandidateDetail";
+import RecipeBook from "./RecipeBook";
 
 const objectives = [
   { key: "budget", label: "Lowest listed cost" },
@@ -11,11 +12,12 @@ const objectives = [
   { key: "kitchen", label: "Shortest assumed prep" },
 ] as const;
 
-export function RecommendationResults({ result, brief, rice, servings }: {
+export function RecommendationResults({ result, brief, rice, servings, dietaryReview }: {
   result: ExploreResult;
   brief: Brief;
   rice: boolean;
   servings: number;
+  dietaryReview: string;
 }) {
   const eligible = new Set(result.eligibleIds);
   const options = result.candidates.filter((c) => c.feasible && eligible.has(c.identifier));
@@ -43,6 +45,15 @@ export function RecommendationResults({ result, brief, rice, servings }: {
           <p>Review the checks below to see what ruled out the options. You can edit your budget, target, equipment or stock. Keep any required allergen exclusions in place.</p>
         </div>
       )}
+      {options.length > 0 && (
+        <label className="ns-field studio-all-options">
+          <span className="ns-label">Choose the recipe to view</span>
+          <select value={chosen} onChange={(event) => setChosen(event.target.value)}>
+            {options.map((item) => <option key={item.identifier} value={item.identifier}>{item.method} · {item.portionG} g</option>)}
+          </select>
+        </label>
+      )}
+      {selected && <RecipeBook candidate={selected} rice={rice} dietaryReview={dietaryReview} />}
       {picks.length > 0 && (
         <div className="studio-option-grid">
           {picks.map(({ option, labels }) => (
@@ -62,14 +73,6 @@ export function RecommendationResults({ result, brief, rice, servings }: {
             </article>
           ))}
         </div>
-      )}
-      {options.length > 0 && (
-        <label className="ns-field studio-all-options">
-          <span className="ns-label">Compare any eligible portion</span>
-          <select value={chosen} onChange={(event) => setChosen(event.target.value)}>
-            {options.map((item) => <option key={item.identifier} value={item.identifier}>{item.method} · {item.portionG} g</option>)}
-          </select>
-        </label>
       )}
       {selected && <CandidateDetail key={selected.identifier} heading={comparison} candidate={selected} reference={reference} brief={brief} rice={rice} initialServings={servings} />}
       <details className="studio-disclosure" open={options.length === 0 || undefined}>

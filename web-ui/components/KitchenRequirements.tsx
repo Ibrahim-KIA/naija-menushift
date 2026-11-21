@@ -1,6 +1,7 @@
 "use client";
 
-import { ALLERGEN_OPTIONS, ALL_EQUIPMENT, ALL_INVENTORY, EQUIPMENT_LABELS, INVENTORY_ITEMS } from "@/lib/data";
+import { useState } from "react";
+import { ALL_EQUIPMENT, ALL_INVENTORY, EQUIPMENT_LABELS, INVENTORY_ITEMS } from "@/lib/data";
 import type { Brief } from "@/lib/engine";
 
 const PORTION_CHOICES = [80, 100, 120, 140, 160, 180, 200];
@@ -9,87 +10,43 @@ function toggle(list: string[], value: string) {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 }
 
+function NumberConstraint({ id, label, value, options, minimum, onChange }: {
+  id: string; label: string; value: number; options: number[]; minimum: number; onChange: (value: number) => void;
+}) {
+  const [custom, setCustom] = useState(!options.includes(value));
+  return (
+    <div className="ns-field">
+      <label className="ns-label" htmlFor={id}>{label}</label>
+      <select id={id} value={custom || !options.includes(value) ? "custom" : value} onChange={(event) => {
+        setCustom(event.target.value === "custom");
+        if (event.target.value !== "custom") onChange(Number(event.target.value));
+      }}>
+        {options.map((option) => <option key={option} value={option}>{option.toLocaleString("en-NG")}</option>)}
+        <option value="custom">Custom amount</option>
+      </select>
+      {(custom || !options.includes(value)) && <label className="ns-field">
+        <span className="ns-label">Custom {label.toLowerCase()}</span>
+        <input type="number" required min={minimum} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      </label>}
+    </div>
+  );
+}
+
 export default function KitchenRequirements({ brief, patch }: {
   brief: Brief;
   patch: (update: Partial<Brief>) => void;
 }) {
   return (
     <>
-<div className="studio-inputs">          <div className="ns-field">
-            <label className="ns-label" htmlFor="budget">
-              Ingredient budget (₦)
-            </label>
-            <div className="ns-dual">
-              <input
-                id="budget"
-                type="number"
-                min={1}
-                value={brief.budgetNgn}
-                onChange={(e) => patch({ budgetNgn: Number(e.target.value) })}
-              />
-              <input
-                type="range"
-                min={100}
-                max={3000}
-                step={50}
-                value={Math.min(3000, Math.max(100, brief.budgetNgn))}
-                onChange={(e) => patch({ budgetNgn: Number(e.target.value) })}
-                aria-label="Budget slider"
-              />
-            </div>
-            <p className="ns-note">Listed ingredients and processing per portion.</p>
-          </div>
-
-          <div className="ns-field">
-            <label className="ns-label" htmlFor="protein">
-              Protein target (g)
-            </label>
-            <div className="ns-dual">
-              <input
-                id="protein"
-                type="number"
-                min={0}
-                max={60}
-                value={brief.proteinTargetG}
-                onChange={(e) => patch({ proteinTargetG: Number(e.target.value) })}
-              />
-              <input
-                type="range"
-                min={0}
-                max={40}
-                step={1}
-                value={Math.min(40, brief.proteinTargetG)}
-                onChange={(e) => patch({ proteinTargetG: Number(e.target.value) })}
-                aria-label="Protein target slider"
-              />
-            </div>
-          </div>
-
-          <div className="ns-field">
-            <label className="ns-label" htmlFor="prep">
-              Prep time limit (min)
-            </label>
-            <div className="ns-dual">
-              <input
-                id="prep"
-                type="number"
-                min={1}
-                value={brief.maxPrepMinutes}
-                onChange={(e) => patch({ maxPrepMinutes: Number(e.target.value) })}
-              />
-              <input
-                type="range"
-                min={15}
-                max={240}
-                step={5}
-                value={Math.min(240, Math.max(15, brief.maxPrepMinutes))}
-                onChange={(e) => patch({ maxPrepMinutes: Number(e.target.value) })}
-                aria-label="Preparation time slider"
-              />
-            </div>
-          </div>
-
-          </div>
+      <div className="studio-inputs">
+        <NumberConstraint id="budget" label="Ingredient budget (₦)" value={brief.budgetNgn} options={[50, 100, 500, 1500, 3000]}
+          minimum={1} onChange={(budgetNgn) => patch({ budgetNgn })} />
+        <NumberConstraint id="protein" label="Protein target (g)" value={brief.proteinTargetG} options={[0, 10, 15, 20, 30]}
+          minimum={0} onChange={(proteinTargetG) => patch({ proteinTargetG })} />
+        <NumberConstraint id="prep" label="Prep time limit (minutes)" value={brief.maxPrepMinutes} options={[35, 45, 60, 90, 120]}
+          minimum={1} onChange={(maxPrepMinutes) => patch({ maxPrepMinutes })} />
+      </div>
+      <p className="ns-note">Protein uses reference data. The budget covers listed suya ingredients and processing per portion.</p>
           <label className="ns-field">
             <span className="ns-label">Preferred texture or preparation</span>
             <input
@@ -104,25 +61,19 @@ export default function KitchenRequirements({ brief, patch }: {
             </span>
           </label>
 
-<div className="studio-constraints">          <fieldset className="ns-fieldset">
-            <legend className="ns-label">Exclude allergens</legend>
-            {ALLERGEN_OPTIONS.map((a) => (
-              <div key={a.id}>
-                <label className="ns-check">
-                  <input
-                    type="checkbox"
-                    checked={brief.avoidAllergens.includes(a.id)}
-                    onChange={() =>
-                      patch({ avoidAllergens: toggle(brief.avoidAllergens, a.id) })
-                    }
-                  />
-                  <span>Avoid {a.label}</span>
-                </label>
-                <p className="ns-note ns-note--indent">{a.hint}</p>
-              </div>
-            ))}
-          </fieldset>
-
+      <div className="studio-constraints">
+        <label className="ns-field">
+          <span className="ns-label">Allergen exclusions</span>
+          <select value={[...brief.avoidAllergens].sort().join(",")} onChange={(event) => patch({
+            avoidAllergens: event.target.value ? event.target.value.split(",") : [],
+          })}>
+            <option value="">No exclusions entered</option>
+            <option value="soy">Exclude soy</option>
+            <option value="peanut">Exclude peanut / groundnut</option>
+            <option value="peanut,soy">Exclude soy and peanut / groundnut</option>
+          </select>
+          <span className="ns-note">Awara contains soy. Peanut exclusion requires a verified peanut-free yaji, which is unavailable in this dataset.</span>
+        </label>
 <details className="ns-advanced"><summary>Equipment and stock</summary>          <fieldset className="ns-fieldset">
             <legend className="ns-label">Available equipment</legend>
             {ALL_EQUIPMENT.map((id) => (

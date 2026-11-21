@@ -7,7 +7,7 @@ export default function HomePage() {
     <div className="ns-shell">
       <a className="ns-skip" href="#menu-studio">Skip to studio</a>
       <header className="ns-header">
-        <a className="ns-wordmark" href="#home"><span aria-hidden="true">✳</span> Naija MenuShift</a>
+        <a className="ns-wordmark" href="#home"><img src="/menushift-logo.png" alt="" width="38" height="38" /> Naija MenuShift</a>
         <nav aria-label="Main navigation">
           <a href="#menu-studio">Studio</a>
           <a href="#institutional-planning">For institutions</a>
@@ -17,16 +17,24 @@ export default function HomePage() {
         <div className="ns-hero-copy">
           <p className="ns-eyebrow">A TASTE OF NIGERIA</p>
           <h1 id="hero-title">Plant-based ideas for Nigerian kitchens.</h1>
-          <p className="ns-hero-purpose">Start with suya. Set your kitchen limits, compare awara preparations with the original and take the strongest option into a trial.</p>
+          <p className="ns-hero-purpose">Turn a familiar dish into a plant-based kitchen trial. Start with suya and get a visual recipe backed by your own brief.</p>
           <a className="ns-cta" href="#menu-studio">Start the guided suya example <span aria-hidden="true">↗</span></a>
         </div>
         <figure className="ns-hero-photo">
           {/* The licensed photo depicts the conventional dish. */}
-          <img src="/suya.jpg" alt="Traditional suya on skewers in Kaduna, Nigeria" width="1080" height="1080" fetchPriority="high" />
-          <figcaption><strong>Traditional suya</strong><a href="https://commons.wikimedia.org/wiki/File:Suya_in_skewers.jpg">Halima Waziri</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> · Cropped</figcaption>
+          <img src="/awara-cover.webp" alt="Concept illustration of grilled awara skewers" width="1536" height="1024" fetchPriority="high" />
+          <figcaption><strong>Awara suya</strong>AI-generated serving concept</figcaption>
         </figure>
       </section>
       <main>
+        <section className="recipe-guide" aria-labelledby="guide-title">
+          <h2 id="guide-title">How to use the studio</h2>
+          <ol>
+            <li><strong>Choose a meal.</strong><span>Start with suya or suya with plain rice.</span></li>
+            <li><strong>Set kitchen requirements.</strong><span>Choose your budget, protein, prep time and allergen exclusions from the menus.</span></li>
+            <li><strong>Read your recipe.</strong><span>See a cover, ingredients, trial method and a comparison with the original.</span></li>
+          </ol>
+        </section>
         <section className="ns-studio-section" id="menu-studio" aria-labelledby="studio-title" tabIndex={-1}>
           <div className="ns-section-intro">
             <div><h2 id="studio-title">Menu studio</h2><p>Explore a catering, hospital or school feeding example.</p></div>
