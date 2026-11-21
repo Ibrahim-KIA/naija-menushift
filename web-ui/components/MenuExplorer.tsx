@@ -168,11 +168,14 @@ export default function MenuExplorer() {
       <p className="ns-note ns-explorer-note">
         Start with a dish you already cook. See what to keep, what to swap, and what to taste-test. Where shown, protein covers the cooked legume portion. Recipe costing and constraint checks are pending.
       </p>
-      <div className="studio-option-grid studio-option-grid--two">
-        {menuAdaptations.map((menu) => (
-          <MenuAdaptationCard key={menu.name} menu={menu} />
-        ))}
-      </div>
+      <details className="studio-disclosure">
+        <summary>Browse {menuAdaptations.length} additional trial recipes (costing not yet validated)</summary>
+        <div className="studio-option-grid studio-option-grid--two">
+          {menuAdaptations.map((menu) => (
+            <MenuAdaptationCard key={menu.name} menu={menu} />
+          ))}
+        </div>
+      </details>
     </section>
   );
 }
