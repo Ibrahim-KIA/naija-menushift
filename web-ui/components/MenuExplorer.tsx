@@ -1,4 +1,4 @@
-const menus = [
+export const menuAdaptations = [
   {
     name: "Jollof rice with peppered cowpeas",
     protein: "Cowpeas",
@@ -53,6 +53,31 @@ const menus = [
   },
 ] as const;
 
+export type MenuAdaptation = (typeof menuAdaptations)[number];
+
+export function MenuAdaptationCard({ menu, expanded = false }: { menu: MenuAdaptation; expanded?: boolean }) {
+  return (
+    <article className="studio-plate">
+      <p className="studio-tag">{menu.protein}</p>
+      <h3 className="ns-menu-name">{menu.name}</h3>
+      <p className="ns-note">Adapted from {menu.original}</p>
+      <p><strong>Keep.</strong> {menu.keep}</p>
+      <p><strong>Swap.</strong> {menu.swap}</p>
+      {menu.estimate && <p><strong>{menu.estimate}</strong> estimated protein from 150 g cooked legumes</p>}
+      <details className="studio-disclosure" open={expanded || undefined}>
+        <summary>Open recipe</summary>
+        <h4>Ingredients for one trial portion</h4>
+        <ul>{menu.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}</ul>
+        <h4>Method</h4>
+        <p>{menu.method}</p>
+        <p><strong>Check in a tasting.</strong> {menu.check}</p>
+        <p className="ns-note">{menu.note}</p>
+        {menu.entry && <p className="ns-note">Composition source. <a href="https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en">FAO/INFOODS WAFCT 2019, {menu.entry}</a></p>}
+      </details>
+    </article>
+  );
+}
+
 export default function MenuExplorer() {
   return (
     <section className="ns-explorer ns-menu-library" id="menu-library" aria-labelledby="explorer-heading">
@@ -61,25 +86,8 @@ export default function MenuExplorer() {
         Start with a dish you already cook. See what to keep, what to swap, and what to taste-test. Where shown, protein covers the cooked legume portion. Recipe costing and constraint checks are pending.
       </p>
       <div className="studio-option-grid studio-option-grid--two">
-        {menus.map((menu) => (
-          <article key={menu.name} className="studio-plate">
-            <p className="studio-tag">{menu.protein}</p>
-            <h3 className="ns-menu-name">{menu.name}</h3>
-            <p className="ns-note">Adapted from {menu.original}</p>
-            <p><strong>Keep.</strong> {menu.keep}</p>
-            <p><strong>Swap.</strong> {menu.swap}</p>
-            {menu.estimate && <p><strong>{menu.estimate}</strong> estimated protein from 150 g cooked legumes</p>}
-            <details className="studio-disclosure">
-              <summary>Open recipe</summary>
-              <h4>Ingredients for one trial portion</h4>
-              <ul>{menu.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}</ul>
-              <h4>Method</h4>
-              <p>{menu.method}</p>
-              <p><strong>Check in a tasting.</strong> {menu.check}</p>
-              <p className="ns-note">{menu.note}</p>
-              {menu.entry && <p className="ns-note">Composition source. <a href="https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en">FAO/INFOODS WAFCT 2019, {menu.entry}</a></p>}
-            </details>
-          </article>
+        {menuAdaptations.map((menu) => (
+          <MenuAdaptationCard key={menu.name} menu={menu} />
         ))}
       </div>
     </section>

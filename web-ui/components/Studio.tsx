@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import KitchenRequirements from "./KitchenRequirements";
+import { menuAdaptations, MenuAdaptationCard, type MenuAdaptation } from "./MenuExplorer";
 import { RecommendationResults } from "./RecommendationResults";
 import { DEFAULT_BRIEF, explore, type Brief, type ExploreResult } from "@/lib/engine";
 
@@ -14,12 +15,17 @@ const examples = [
 type Example = (typeof examples)[number];
 type Run = { result: ExploreResult; brief: Brief; rice: boolean; example: Example; dietaryReview: string };
 const SEASONED_BRIEF: Brief = { ...DEFAULT_BRIEF, onionG: 15, pepperG: 3, saltG: 0.5, seasoningG: 0 };
-const stepLabels = ["Choose a meal", "Set requirements", "Read your recipe"] as const;
+type MealChoice = "suya" | "suya-with-rice" | MenuAdaptation["name"];
+const comparisonSteps = ["Choose a meal", "Set requirements", "Read your recipe"] as const;
+const trialSteps = ["Choose a meal", "Read your recipe"] as const;
 
 export default function Studio() {
   const [example, setExample] = useState<Example>(examples[0]);
   const [dietaryReview, setDietaryReview] = useState("");
-  const [rice, setRice] = useState(false);
+  const [meal, setMeal] = useState<MealChoice>("suya");
+  const trial = menuAdaptations.find((option) => option.name === meal);
+  const rice = meal === "suya-with-rice";
+  const stepLabels = trial ? trialSteps : comparisonSteps;
   const [brief, setBrief] = useState<Brief>(SEASONED_BRIEF);
   const [step, setStep] = useState(0);
   const [run, setRun] = useState<Run | null>(null);
@@ -31,6 +37,12 @@ export default function Studio() {
   const goTo = (next: number) => {
     setStep(next);
     requestAnimationFrame(() => heading.current?.focus());
+  };
+
+  const chooseMeal = (next: MealChoice) => {
+    setMeal(next);
+    setRun(null);
+    setError(null);
   };
 
   const chooseExample = (next: Example) => {
@@ -77,7 +89,7 @@ export default function Studio() {
         <div className="studio-step-header">
           <div>
             <h3 ref={heading} tabIndex={-1}>{stepLabels[step]}</h3>
-            <p>{step === 0 ? "Start with suya, the dish supported by this recommendation dataset." : step === 1 ? "Adjust the example to match your kitchen before comparing." : "Review the trade-offs and decide what to test in the kitchen."}</p>
+            <p>{step === 0 ? "Choose suya for a kitchen comparison, or open another dish as a trial recipe." : step === 1 && !trial ? "Adjust the example to match your kitchen before comparing." : "Review the trade-offs and decide what to test in the kitchen."}</p>
           </div>
           {step > 0 && !loading && <button type="button" className="studio-secondary" onClick={() => goTo(step - 1)}>{step === 2 ? "Edit requirements" : "Back"}</button>}
         </div>
@@ -87,15 +99,22 @@ export default function Studio() {
               <legend>Meal</legend>
               <div className="studio-option-grid studio-option-grid--two">
                 <label className="studio-option">
-                  <input type="radio" name="meal" checked={!rice} onChange={() => { setRice(false); setRun(null); }} />
+                  <input type="radio" name="meal" checked={meal === "suya"} onChange={() => chooseMeal("suya")} />
                   <span><strong>Suya</strong><small>Same-portion beef and awara comparison</small></span>
                 </label>
                 <label className="studio-option">
-                  <input type="radio" name="meal" checked={rice} onChange={() => { setRice(true); setRun(null); }} />
+                  <input type="radio" name="meal" checked={rice} onChange={() => chooseMeal("suya-with-rice")} />
                   <span><strong>Suya with plain rice</strong><small>Shared rice side added to the protein comparison</small></span>
                 </label>
+                {menuAdaptations.map((option) => (
+                  <label className="studio-option" key={option.name}>
+                    <input type="radio" name="meal" checked={meal === option.name} onChange={() => chooseMeal(option.name)} />
+                    <span><strong>{option.name}</strong><small>Trial recipe · {option.protein}</small></span>
+                  </label>
+                ))}
               </div>
             </fieldset>
+            {!trial && <>
             <fieldset className="studio-pick">
               <legend>Kitchen example</legend>
               <div className="studio-option-grid">
@@ -108,10 +127,13 @@ export default function Studio() {
               </div>
             </fieldset>
             <p className="ns-note">Examples supply editable assumptions for the same suya analysis. Use a qualified reviewer for therapeutic diets or school meal standards.</p>
-            <button className="studio-primary" onClick={() => goTo(1)}>Set kitchen requirements <span aria-hidden="true">→</span></button>
+            </>}
+            {trial && <p className="ns-note">This dish has a trial recipe. Costing and kitchen constraint checks are pending.</p>}
+            <button className="studio-primary" onClick={() => goTo(1)}>{trial ? "Read trial recipe" : "Set kitchen requirements"} <span aria-hidden="true">→</span></button>
           </>
         )}
-        {step === 1 && (
+        {step === 1 && trial && <MenuAdaptationCard menu={trial} expanded />}
+        {step === 1 && !trial && (
           <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
             <p className="studio-scope">{example.name} · {rice ? "Suya with rice" : "Suya"} · Limits apply to the suya portion</p>
             <KitchenRequirements key={example.id} brief={brief} patch={patch} />
