@@ -174,7 +174,7 @@ export default function KitchenRequirements({ brief, patch }: {
                 <input
                   type="number"
                   min={0}
-                  value={brief.saltG}
+                  step={0.1} value={brief.saltG}
                   onChange={(e) => patch({ saltG: Number(e.target.value) })}
                 />
               </label>
