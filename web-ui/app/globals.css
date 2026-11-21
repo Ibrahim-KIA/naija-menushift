@@ -877,3 +877,29 @@ body { background: #f7f3e9; }
 .menu-concept figcaption { font-size: .78rem; color: #41574a; }
 #feedback { margin-top: 22px; }
 #feedback textarea { width: 100%; max-width: 680px; padding: .6rem; font: inherit; border: 1px solid #8ba093; border-radius: 8px; }
+
+/* Progressive disclosure for first-time restaurant and catering users. */
+.studio-suggested-target {
+  border: 1px solid #b9d1bc;
+  border-left: 4px solid #3c8560;
+  background: #edf5ed;
+  border-radius: 10px;
+  color: #244433;
+  margin: 12px 0;
+  padding: 12px 15px;
+  line-height: 1.45;
+}
+.studio-suggested-target strong { display: block; font-weight: 750; }
+.studio-suggested-target span { font-size: .92rem; }
+.studio-optional-control { margin: 10px 0; }
+.studio-optional-control > .ns-field, .studio-optional-control > .ns-note { margin: 12px 0; }
+.studio-optional-results .studio-option-grid { margin-top: 16px; }
+.studio-comparison-details > .studio-comparison { margin-top: 14px; }
+.recipe-more { margin-top: 18px; }
+.recipe-more .recipe-columns { margin-top: 16px; }
+.recipe-guide .studio-disclosure { margin: 0; max-width: 100%; }
+.ns-menu-library > .studio-disclosure > .studio-option-grid { margin-top: 16px; }
+.studio-inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 530px) {
+  .studio-inputs { grid-template-columns: 1fr; }
+}
