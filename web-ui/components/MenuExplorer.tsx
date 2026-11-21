@@ -96,6 +96,48 @@ export const menuAdaptations = [
 export type MenuAdaptation = (typeof menuAdaptations)[number];
 
 export function MenuAdaptationCard({ menu, expanded = false }: { menu: MenuAdaptation; expanded?: boolean }) {
+  if (expanded) {
+    return (
+      <article className="recipe-book" aria-labelledby="adaptation-title">
+        <figure className="recipe-cover">
+          <img src={`/menu-${menu.image}.webp`} alt="" width={883} height={439} />
+          <figcaption>AI-generated concept for this dish family</figcaption>
+        </figure>
+        <div className="recipe-body">
+          <header className="recipe-title">
+            <p>A TASTE OF NIGERIA · KITCHEN TRIAL</p>
+            <h4 id="adaptation-title">{menu.name}</h4>
+            <p>{menu.protein} · One trial serving</p>
+          </header>
+          <div className="recipe-columns">
+            <section aria-labelledby="adaptation-ingredients">
+              <h5 id="adaptation-ingredients">Ingredients</h5>
+              <ul className="recipe-ingredients">{menu.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}</ul>
+              {menu.estimate && <p><strong>{menu.estimate}</strong> estimated protein from 150 g cooked legumes.</p>}
+              {menu.entry && <p className="ns-note"><a href="https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en">FAO/INFOODS WAFCT 2019, {menu.entry}</a></p>}
+            </section>
+            <section aria-labelledby="adaptation-method">
+              <h5 id="adaptation-method">Trial method</h5>
+              <ol className="recipe-method">
+                {menu.method.match(/[^.!?]+[.!?]?/g)?.map((step) => <li key={step}>{step.trim()}</li>)}
+              </ol>
+              <p className="ns-note">{menu.note}</p>
+            </section>
+          </div>
+          <NutritionPanel demo={menu.nutrition} />
+          <section className="studio-comparison" aria-label="Original versus adaptation">
+            <h4>Original vs. alternative</h4>
+            <div className="studio-option-grid studio-option-grid--two">
+              <div className="studio-plate"><p className="studio-tag">Original</p><h5>{menu.original}</h5><p>{menu.keep}</p></div>
+              <div className="studio-plate studio-plate--adapted"><p className="studio-tag">Plant-based adaptation</p><h5>{menu.name}</h5><p>{menu.swap}</p></div>
+            </div>
+            <p><strong>Check in a tasting.</strong> {menu.check}</p>
+            <p className="ns-note">Full-meal costs and like-for-like nutrition comparisons need weighed recipes and verified ingredient data.</p>
+          </section>
+        </div>
+      </article>
+    );
+  }
   return (
     <article className="studio-plate">
       <p className="studio-tag">{menu.protein}</p>
@@ -106,7 +148,6 @@ export function MenuAdaptationCard({ menu, expanded = false }: { menu: MenuAdapt
       {menu.estimate && <p><strong>{menu.estimate}</strong> estimated protein from 150 g cooked legumes</p>}
       <details className="studio-disclosure" open={expanded || undefined}>
         <summary>Open recipe</summary>
-        {expanded && <figure className="menu-concept"><img src={`/menu-${menu.image}.webp`} alt="" /><figcaption>AI-generated concept for this dish family</figcaption></figure>}
         <h4>Ingredients for one trial portion</h4>
         <ul>{menu.ingredients.map((ingredient) => <li key={ingredient}>{ingredient}</li>)}</ul>
         <h4>Method</h4>
