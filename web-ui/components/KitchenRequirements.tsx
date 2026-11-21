@@ -41,25 +41,34 @@ export default function KitchenRequirements({ brief, patch }: {
       <div className="studio-inputs">
         <NumberConstraint id="budget" label="Ingredient budget (₦)" value={brief.budgetNgn} options={[50, 100, 500, 1500, 3000]}
           minimum={1} onChange={(budgetNgn) => patch({ budgetNgn })} />
-        <NumberConstraint id="protein" label="Protein target (g)" value={brief.proteinTargetG} options={[0, 10, 15, 20, 30]}
-          minimum={0} onChange={(proteinTargetG) => patch({ proteinTargetG })} />
         <NumberConstraint id="prep" label="Prep time limit (minutes)" value={brief.maxPrepMinutes} options={[35, 45, 60, 90, 120]}
           minimum={1} onChange={(maxPrepMinutes) => patch({ maxPrepMinutes })} />
       </div>
-      <p className="ns-note">Protein uses reference data. The budget covers listed suya ingredients and processing per portion.</p>
-          <label className="ns-field">
-            <span className="ns-label">Preferred texture or preparation</span>
-            <input
-              type="text"
-              maxLength={200}
-              value={brief.preference}
-              onChange={(e) => patch({ preference: e.target.value })}
-              placeholder="e.g. chewy grilled"
-            />
-            <span className="ns-note">
-              Used to rank matching words after the kitchen checks.
-            </span>
-          </label>
+      <p className="ns-note">The budget covers the listed suya ingredients and processing, not a complete plated meal.</p>
+      <div className="studio-suggested-target" role="note">
+        <strong>Protein check prefilled: {brief.proteinTargetG} g per suya portion.</strong>
+        <span> This is an illustrative research threshold for comparing this dish, not a recommendation for any person's daily protein needs or medical condition.</span>
+      </div>
+      <details className="ns-advanced studio-optional-control">
+        <summary>Adjust the protein check (for recipe researchers and dietitians)</summary>
+        <p className="ns-note">A qualified professional must set any patient-specific or school-meal requirements. This prototype cannot calculate protein needs from diagnoses or family history.</p>
+        <NumberConstraint id="protein" label="Minimum estimated protein in the suya portion (g)" value={brief.proteinTargetG} options={[0, 10, 15, 20, 30]}
+          minimum={0} onChange={(proteinTargetG) => patch({ proteinTargetG })} />
+      </details>
+      <details className="ns-advanced studio-optional-control">
+        <summary>Optional taste or texture preference</summary>
+        <label className="ns-field">
+          <span className="ns-label">Preferred texture or preparation</span>
+          <input
+            type="text"
+            maxLength={200}
+            value={brief.preference}
+            onChange={(e) => patch({ preference: e.target.value })}
+            placeholder="e.g. chewy grilled"
+          />
+          <span className="ns-note">Experimental text matching, not a validated prediction of taste.</span>
+        </label>
+      </details>
 
       <div className="studio-constraints">
         <label className="ns-field">
