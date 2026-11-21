@@ -32,8 +32,10 @@ export default function RecipeBook({ candidate, rice, dietaryReview }: {
           <div><dt>Assumed suya prep</dt><dd>{candidate.prepMinutes} min</dd></div>
           <div><dt>Listed suya cost</dt><dd>{money(candidate.costNgn)}</dd></div>
         </dl>
-        <NutritionPanel iron={candidate.ironMg} zinc={candidate.zincMg} protein={candidate.proteinG + (rice ? 3.45 : 0)} portion={`${candidate.portionG} g suya portion${rice ? " with 150 g plain rice" : ""}`} />
         {dietaryReview && <p className="recipe-review" role="note"><strong>{dietaryReview}.</strong> This recipe has not been checked against that requirement. Have a qualified reviewer apply your facility’s standards before service.</p>}
+        <details className="studio-disclosure recipe-more">
+          <summary>View ingredients, nutrition details and cooking instructions</summary>
+        <NutritionPanel iron={candidate.ironMg} zinc={candidate.zincMg} protein={candidate.proteinG + (rice ? 3.45 : 0)} portion={`${candidate.portionG} g suya portion${rice ? " with 150 g plain rice" : ""}`} />
         <div className="recipe-columns">
           <section aria-labelledby="ingredients-title">
             <h5 id="ingredients-title">Ingredients</h5>
@@ -58,6 +60,7 @@ export default function RecipeBook({ candidate, rice, dietaryReview }: {
             <p className="ns-note">Protein is estimated from the awara reference and the rice where selected. The seasoning rows are priced only. Follow your kitchen’s approved cooking and handling procedures. Record measured yield, prep time and finished-portion weight before using this formulation in service.</p>
           </section>
         </div>
+        </details>
       </div>
     </article>
   );
