@@ -7,12 +7,12 @@ import { MENU_EXPLORER_ITEMS } from "@/lib/data";
  */
 export default function MenuExplorer() {
   return (
-    <section className="ns-explorer" aria-labelledby="explorer-heading">
+    <section className="ns-explorer ns-menu-library" aria-labelledby="explorer-heading">
       <h2 id="explorer-heading" className="ns-panel-title">
-        More Nigerian dishes to explore
+        Dishes awaiting research data
       </h2>
       <p className="ns-note ns-explorer-note">
-        Ideas for future kitchen trials. Cost and nutrition comparisons are pending.
+        The interactive studio covers suya. These dishes need preparation and cost records before we can compare options.
       </p>
       <div className="ns-menu-grid">
         {MENU_EXPLORER_ITEMS.map((item) => (

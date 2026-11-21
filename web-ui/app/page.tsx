@@ -16,9 +16,9 @@ export default function HomePage() {
       <section className="ns-hero ns-landing" id="home" aria-labelledby="hero-title">
         <div className="ns-hero-copy">
           <p className="ns-eyebrow">A TASTE OF NIGERIA</p>
-          <h1 id="hero-title">Familiar dishes.<br />New possibilities.</h1>
-          <p className="ns-hero-purpose">Explore plant-based versions of dishes you already serve. Compare ingredients, costs and preparation before your first kitchen trial.</p>
-          <a className="ns-cta" href="#menu-studio">Try the suya example <span aria-hidden="true">↗</span></a>
+          <h1 id="hero-title">Plant-based ideas for Nigerian kitchens.</h1>
+          <p className="ns-hero-purpose">Start with suya. Set your kitchen limits, compare awara preparations with the original and take the strongest option into a trial.</p>
+          <a className="ns-cta" href="#menu-studio">Start the guided suya example <span aria-hidden="true">↗</span></a>
         </div>
         <figure className="ns-hero-photo">
           {/* The licensed photo depicts the conventional dish. */}
@@ -29,7 +29,7 @@ export default function HomePage() {
       <main>
         <section className="ns-studio-section" id="menu-studio" aria-labelledby="studio-title" tabIndex={-1}>
           <div className="ns-section-intro">
-            <div><h2 id="studio-title">Menu studio</h2><p>Choose a meal, set your limits and compare options for a trial.</p></div>
+            <div><h2 id="studio-title">Menu studio</h2><p>Explore a catering, hospital or school feeding example.</p></div>
             <details className="ns-evidence"><summary>About the estimates</summary><p>Prices and yields are demonstration inputs. Nutrients use ingredient references. Confirm supplier labels, cross-contact and actual batch yields before service.</p></details>
           </div>
           <Studio />
@@ -41,7 +41,7 @@ export default function HomePage() {
             <article><h3>School feeding</h3><p>Check supplier capacity, portions, service scale and student acceptance against the programme’s standards with its nutrition team.</p></article>
           </div>
           <details className="ns-plate-plan">
-            <summary>Explore an eba and egusi meal plan</summary>
+            <summary>What an eba and egusi comparison would require</summary>
             <div className="ns-use-cases">
               <article><h3>Original plate</h3><p>Eba, egusi soup and beef. Record the beef cut, cooked serving weight and every stock and seasoning ingredient.</p></article>
               <article><h3>Proposed plate</h3><p>Eba, egusi soup with a verified plant-based stock, and awara. Confirm soy and other allergens, supplier specifications and texture after holding.</p></article>
