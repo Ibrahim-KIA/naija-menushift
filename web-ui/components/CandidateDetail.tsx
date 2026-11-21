@@ -88,7 +88,7 @@ export default function CandidateDetail({ heading, candidate, reference, brief, 
       <details className="studio-disclosure">
         <summary>Meal visualisation prompt</summary>
         <p>Copy this prompt into an image tool for a concept illustration. Live image generation is unavailable in the studio.</p>
-        <p className="ns-prompt">Concept illustration of Nigerian suya-style skewers with {candidate.method.toLowerCase()}{rice ? " and plain rice" : ""}. Make the awara the focus and label the image “Concept illustration”.</p>
+        <p className="ns-prompt">Concept illustration of Nigerian suya-style skewers using {candidate.ingredientLines.map((line) => line.name.toLowerCase()).join(", ")}{rice ? ", served with plain boiled rice" : ""}. Show the {candidate.method.toLowerCase()} preparation. Depict the listed ingredients only. Label the image “Concept illustration”.</p>
       </details>
       <section className="studio-trial" aria-labelledby="trial-title">
         <div><h5 id="trial-title">Plan a kitchen trial</h5><p className="ns-note">Scale the selected suya portion and take the evidence into a supervised trial.</p></div>

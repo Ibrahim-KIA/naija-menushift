@@ -1,6 +1,12 @@
 import type { Candidate } from "@/lib/engine";
-import { TRIAL_STEPS } from "@/lib/data";
 import { money } from "./CandidateDetail";
+
+const preparations: Record<string, string> = {
+  awara_firm: "Cut weighed firm awara into even pieces for skewering.",
+  awara_pressed: "Press the weighed awara, record the liquid lost, then cut into even pieces.",
+  awara_frozen: "Use your approved freeze and thaw procedure, then press and portion the thawed awara.",
+  awara_fried: "Portion the awara for pan-frying. Measure the listed oil and record how much the batch uses.",
+};
 
 export default function RecipeBook({ candidate, rice, dietaryReview }: {
   candidate: Candidate;
@@ -29,7 +35,7 @@ export default function RecipeBook({ candidate, rice, dietaryReview }: {
         <div className="recipe-columns">
           <section aria-labelledby="ingredients-title">
             <h5 id="ingredients-title">Ingredients</h5>
-            <p className="ns-note">Modelled purchase quantities for one serving.</p>
+            <p className="ns-note">One trial serving. Quantities are editable in your brief.</p>
             <ul className="recipe-ingredients">
               {candidate.ingredientLines.map((line) => <li key={line.ingredientId}>
                 <span>{line.name}</span><strong>{line.purchaseG} g</strong>
@@ -37,14 +43,17 @@ export default function RecipeBook({ candidate, rice, dietaryReview }: {
               {candidate.oilCl > 0 && <li><span>Oil for frying</span><strong>{candidate.oilCl} cl</strong></li>}
               {rice && <li><span>Plain boiled rice</span><strong>150 g cooked</strong></li>}
             </ul>
-            <p className="ns-note">Check the actual seasoning and yaji ingredient labels and cross-contact risks. Rice cost and prep are excluded.</p>
+            <p className="ns-note">The example uses fresh onion, chilli and plain salt. Use plain ingredients with verified supplier labels. Keep stock, cubes and unreviewed blends out of the trial. {rice && "Rice cost and prep are excluded."}</p>
           </section>
           <section aria-labelledby="recipe-method-title">
             <h5 id="recipe-method-title">Trial method</h5>
             <ol className="recipe-method">
-              {(TRIAL_STEPS[candidate.methodId] ?? []).map((step) => <li key={step}>{step}</li>)}
+              <li>{preparations[candidate.methodId] ?? "Weigh and portion the awara before the trial."}</li>
+              <li>Use the amounts listed. Chop fresh onion and chilli if included. Keep a little onion for serving and season the awara with the remaining listed ingredients.</li>
+              <li>{candidate.oilCl > 0 ? "Pan-fry the portion using the listed oil." : "Thread the pieces onto skewers and grill under your kitchen’s approved procedure."} Record the time and finished weight.</li>
+              <li>Plate the awara{rice ? " beside the weighed cooked rice" : ""}. Add any reserved onion and record the final serving weight and holding texture.</li>
             </ol>
-            <p className="ns-note">Follow your kitchen’s approved cooking and handling procedures. Record measured yield, prep time and finished-portion weight before using this formulation in service.</p>
+            <p className="ns-note">Protein is estimated from the awara reference and the rice where selected. The seasoning rows are priced only. Follow your kitchen’s approved cooking and handling procedures. Record measured yield, prep time and finished-portion weight before using this formulation in service.</p>
           </section>
         </div>
       </div>

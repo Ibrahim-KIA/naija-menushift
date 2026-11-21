@@ -13,13 +13,14 @@ const examples = [
 
 type Example = (typeof examples)[number];
 type Run = { result: ExploreResult; brief: Brief; rice: boolean; example: Example; dietaryReview: string };
+const SEASONED_BRIEF: Brief = { ...DEFAULT_BRIEF, onionG: 15, pepperG: 3, saltG: 0.5, seasoningG: 0 };
 const stepLabels = ["Choose a meal", "Set requirements", "Read your recipe"] as const;
 
 export default function Studio() {
   const [example, setExample] = useState<Example>(examples[0]);
   const [dietaryReview, setDietaryReview] = useState("");
   const [rice, setRice] = useState(false);
-  const [brief, setBrief] = useState<Brief>(DEFAULT_BRIEF);
+  const [brief, setBrief] = useState<Brief>(SEASONED_BRIEF);
   const [step, setStep] = useState(0);
   const [run, setRun] = useState<Run | null>(null);
   const [loading, setLoading] = useState(false);
@@ -131,7 +132,7 @@ export default function Studio() {
             )}
             <div className="studio-actions">
               <button type="submit" className="studio-primary">Find my trial recipe <span aria-hidden="true">→</span></button>
-              <button className="studio-secondary" type="button" onClick={() => { setBrief({ ...DEFAULT_BRIEF, maxPrepMinutes: example.time }); setRun(null); }}>Reset requirements</button>
+              <button className="studio-secondary" type="button" onClick={() => { setBrief({ ...SEASONED_BRIEF, maxPrepMinutes: example.time }); setRun(null); }}>Reset requirements</button>
             </div>
           </form>
         )}

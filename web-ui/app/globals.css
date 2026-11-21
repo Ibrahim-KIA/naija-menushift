@@ -851,3 +851,17 @@ body { background: #f7f3e9; }
 .recipe-review { margin-bottom: 18px; }
 @media(max-width:760px) { .recipe-guide { margin-top: -8px; } .recipe-guide ol,.recipe-columns { grid-template-columns: 1fr; } }
 @media(max-width:520px) { .recipe-facts { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* Keep cookbook labels and numbers readable on small screens. */
+.recipe-title h4 { text-wrap: balance; }
+.recipe-body { overflow-wrap: anywhere; }
+.recipe-guide li { padding-inline-start: .15rem; }
+.recipe-ingredients li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; }
+.recipe-ingredients strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.recipe-method li { padding-inline-start: .25rem; }
+@media (max-width: 530px) {
+  .recipe-cover figcaption { line-height: 1.35; }
+  .recipe-columns { gap: 24px; }
+  .recipe-facts dd { line-height: 1.45; }
+  .studio-inputs > .ns-field { margin-bottom: 0; }
+}
