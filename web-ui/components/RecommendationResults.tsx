@@ -23,6 +23,7 @@ export function RecommendationResults({ result, brief, rice, servings, dietaryRe
   const options = result.candidates.filter((c) => c.feasible && eligible.has(c.identifier));
   const rejected = result.candidates.filter((c) => !c.feasible);
   const [chosen, setChosen] = useState(result.best.budget ?? options[0]?.identifier ?? "");
+  const [comparisonOpen, setComparisonOpen] = useState(false);
   const comparison = useRef<HTMLHeadingElement>(null);
   const selected = options.find((option) => option.identifier === chosen);
   const reference = result.reference.find((item) => item.portionG === selected?.portionG);
@@ -55,6 +56,8 @@ export function RecommendationResults({ result, brief, rice, servings, dietaryRe
       )}
       {selected && <RecipeBook candidate={selected} rice={rice} dietaryReview={dietaryReview} />}
       {picks.length > 0 && (
+        <details className="studio-disclosure studio-optional-results">
+          <summary>Compare other ranking priorities ({picks.length})</summary>
         <div className="studio-option-grid">
           {picks.map(({ option, labels }) => (
             <article className="studio-recommendation" key={option.identifier} data-selected={chosen === option.identifier}>
@@ -67,14 +70,20 @@ export function RecommendationResults({ result, brief, rice, servings, dietaryRe
                 <div><dt>Assumed prep</dt><dd>{option.prepMinutes} min</dd></div>
               </dl>
               <button type="button" className="studio-secondary" aria-pressed={chosen === option.identifier}
-                onClick={() => { setChosen(option.identifier); requestAnimationFrame(() => comparison.current?.focus()); }}>
+                onClick={() => { setChosen(option.identifier); setComparisonOpen(true); requestAnimationFrame(() => comparison.current?.focus()); }}>
                 Compare this option
               </button>
             </article>
           ))}
         </div>
+        </details>
       )}
-      {selected && <CandidateDetail key={selected.identifier} heading={comparison} candidate={selected} reference={reference} brief={brief} rice={rice} initialServings={servings} />}
+      {selected && (
+        <details className="studio-disclosure studio-comparison-details" open={comparisonOpen} onToggle={(event) => setComparisonOpen(event.currentTarget.open)}>
+          <summary>Compare with beef, inspect sources and plan a kitchen trial</summary>
+          <CandidateDetail key={selected.identifier} heading={comparison} candidate={selected} reference={reference} brief={brief} rice={rice} initialServings={servings} />
+        </details>
+      )}
       <details className="studio-disclosure" open={options.length === 0 || undefined}>
         <summary>Why options were ruled out</summary>
         <ul>
@@ -91,7 +100,10 @@ export function RecommendationResults({ result, brief, rice, servings, dietaryRe
           </ul>
         )}
       </details>
-      <p className="ns-note">{DATASET_NOTE}</p>
+      <details className="studio-disclosure">
+        <summary>About the research data and limitations</summary>
+        <p className="ns-note">{DATASET_NOTE}</p>
+      </details>
     </div>
   );
 }
