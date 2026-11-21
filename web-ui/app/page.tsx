@@ -31,12 +31,15 @@ export default function HomePage() {
       </section>
       <main>
         <section className="recipe-guide" aria-labelledby="guide-title">
-          <h2 id="guide-title">How to use the studio</h2>
-          <ol>
-            <li><strong>Choose a meal.</strong><span>Start with suya or suya with plain rice.</span></li>
-            <li><strong>Set kitchen requirements.</strong><span>Choose your budget, protein, prep time and allergen exclusions from the menus.</span></li>
-            <li><strong>Read your recipe.</strong><span>See a cover, ingredients, trial method and a comparison with the original.</span></li>
-          </ol>
+          <h2 id="guide-title">New to Naija MenuShift?</h2>
+          <details className="studio-disclosure">
+            <summary>Show the three steps to find a kitchen trial</summary>
+            <ol>
+              <li><strong>Choose a meal.</strong><span>Start with suya or suya with plain rice.</span></li>
+              <li><strong>Set kitchen requirements.</strong><span>Enter budget, time and allergen restrictions. The protein check is prefilled for this example.</span></li>
+              <li><strong>Read your recipe.</strong><span>See a cover and summary, then expand ingredients, preparation and the beef comparison when needed.</span></li>
+            </ol>
+          </details>
         </section>
         <section className="ns-studio-section" id="menu-studio" aria-labelledby="studio-title" tabIndex={-1}>
           <div className="ns-section-intro">
@@ -47,10 +50,14 @@ export default function HomePage() {
         </section>
         <section className="ns-institutional" id="institutional-planning" aria-labelledby="institutional-title">
           <div className="ns-section-intro"><div><h2 id="institutional-title">Plan for an institutional kitchen</h2><p>Move from an ingredient shortlist to a trial your team can measure.</p></div></div>
-          <div className="ns-use-cases">
-            <article><h3>Hospital catering</h3><p>Start with a general catering menu. Record cost per served portion, batch yield and allergens. Have a qualified dietitian review any therapeutic use.</p></article>
-            <article><h3>School feeding</h3><p>Check supplier capacity, portions, service scale and student acceptance against the programme’s standards with its nutrition team.</p></article>
-          </div>
+          <details className="studio-disclosure">
+            <summary>Where could this help? Hospitals, schools and caterers</summary>
+            <div className="ns-use-cases">
+              <article><h3>Hospital catering</h3><p>Start with a general catering menu. Record cost per served portion, batch yield and allergens. Have a qualified dietitian review any therapeutic use.</p></article>
+              <article><h3>School feeding</h3><p>Check supplier capacity, portions, service scale and student acceptance against the programme’s standards with its nutrition team.</p></article>
+            </div>
+            <p className="ns-note">Individual wellness and family-health-history audiences are a potential future market to research, not a medical feature or a verified customer segment. The app does not assess disease risk or calculate personal nutritional needs.</p>
+          </details>
           <details className="ns-plate-plan">
             <summary>What an eba and egusi comparison would require</summary>
             <div className="ns-use-cases">
