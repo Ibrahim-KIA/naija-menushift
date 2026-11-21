@@ -9,15 +9,10 @@ export default function MenuExplorer() {
   return (
     <section className="ns-explorer" aria-labelledby="explorer-heading">
       <h2 id="explorer-heading" className="ns-panel-title">
-        Plant-based menu explorer — the wider vision
+        More Nigerian dishes to explore
       </h2>
       <p className="ns-note ns-explorer-note">
-        Illustrative menu items only — not engine outputs and not costed formulations.
-        Inspired by the real plant-based Nigerian menu at Veggie Victory, Lagos
-        (Nigeria’s first vegan restaurant, est. 2013): proof that familiar dishes
-        already have plant-based versions in the market. MenuShift’s job is to help
-        any kitchen evaluate such shifts against its own budget, stock and equipment —
-        starting with the sourced suya studio above.
+        Ideas for future kitchen trials. Cost and nutrition comparisons are pending.
       </p>
       <div className="ns-menu-grid">
         {MENU_EXPLORER_ITEMS.map((item) => (

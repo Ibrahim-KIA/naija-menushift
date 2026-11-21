@@ -24,6 +24,9 @@ const naira0 = (n: number) => `₦${n.toLocaleString("en-NG", { maximumFractionD
 const naira2 = (n: number) =>
   `₦${n.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+// 150 g of boiled, drained white rice at 2.3 g protein per 100 g (WAFCT 01_069).
+const RICE_PORTION_G = 150;
+const RICE_PROTEIN_G = RICE_PORTION_G * 2.3 / 100;
 const PORTION_CHOICES = [80, 100, 120, 140, 160, 180, 200];
 
 const OBJECTIVES = [
@@ -49,6 +52,7 @@ function toggle(list: string[], value: string): string[] {
 }
 
 export default function Studio() {
+  const [meal, setMeal] = useState<"suya" | "rice-plate">("suya");
   const [brief, setBrief] = useState<Brief>(DEFAULT_BRIEF);
   const [result, setResult] = useState<ExploreResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +63,7 @@ export default function Studio() {
   useEffect(() => {
     const seq = ++requestSeq.current;
     setLoading(true);
+    setError(null);
     explore(brief)
       .then((res) => {
         if (seq !== requestSeq.current) return;
@@ -68,6 +73,7 @@ export default function Studio() {
       })
       .catch((err: unknown) => {
         if (seq !== requestSeq.current) return;
+        setResult(null);
         setError(err instanceof Error ? err.message : "Engine request failed");
         setLoading(false);
       });
@@ -87,14 +93,13 @@ export default function Studio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result]);
 
+  const riceProteinG = meal === "rice-plate" ? RICE_PROTEIN_G : 0;
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
   const eligibleCount = result?.eligibleIds.length ?? 0;
-  const frontierCount = result?.frontierIds.length ?? 0;
   const referenceForPortion = selected
     ? result?.reference.find((r) => r.portionG === selected.portionG)
     : undefined;
 
-  const currentStep = !result ? 2 : eligibleCount > 0 ? 4 : 3;
 
   const patch = (p: Partial<Brief>) => setBrief((b) => ({ ...b, ...p }));
 
@@ -113,37 +118,25 @@ export default function Studio() {
 
   return (
     <>
-      <ol className="ns-steps" aria-label="Progress">
-        {["Choose dish", "Set constraints", "Compare formulations", "Inspect & trial"].map(
-          (label, i) => {
-            const n = i + 1;
-            const state = n < currentStep ? "done" : n === currentStep ? "current" : "todo";
-            return (
-              <li key={label} className={`ns-step ns-step--${state}`} aria-current={state === "current" ? "step" : undefined}>
-                <span className="ns-step-num">{n}</span> {label}
-              </li>
-            );
-          },
-        )}
-      </ol>
-
       <div className="ns-layout">
         {/* ------------------------------------------------ constraints */}
         <section className="ns-panel" aria-labelledby="constraints-heading">
           <h2 id="constraints-heading" className="ns-panel-title">
-            01 · Restaurant brief
+            Kitchen brief
           </h2>
 
           <label className="ns-field">
-            <span className="ns-label">Current menu item</span>
-            <select value="suya" disabled aria-describedby="dish-note">
-              <option value="suya">Suya — awara (soy curd) formulations</option>
+            <span className="ns-label">Choose a meal</span>
+            <select value={meal} aria-describedby="dish-note" onChange={(e) => setMeal(e.target.value === "rice-plate" ? "rice-plate" : "suya")}>
+              <option value="suya">Suya</option>
+              <option value="rice-plate">Suya with plain rice</option>
             </select>
           </label>
-          <p className="ns-note" id="dish-note">
-            Suya is the first sourced use case. Further dishes join only when a sourced
-            dataset exists for them; the studio does not invent dishes or data.
-          </p>
+          <p className="ns-note" id="dish-note">Your limits apply to the suya component. Choose the rice plate to see the added protein estimate for a shared side.</p>
+          <button type="button" className="ns-reset" onClick={() => {
+            setBrief(DEFAULT_BRIEF);
+            setMeal("suya");
+          }}>Reset to example</button>
 
           <div className="ns-field">
             <label className="ns-label" htmlFor="budget">
@@ -385,7 +378,7 @@ export default function Studio() {
         {/* ---------------------------------------------------- results */}
         <section className="ns-results" aria-labelledby="results-heading">
           <h2 id="results-heading" className="ns-panel-title">
-            02 · Formulation exploration
+            Compare alternatives
           </h2>
 
           {error && (
@@ -398,19 +391,11 @@ export default function Studio() {
             <div className="ns-summary" aria-live="polite">
               <div className="ns-stat">
                 <span className="ns-stat-num num">{result.inspected}</span>
-                <span className="ns-stat-label">inspected</span>
-              </div>
-              <div className="ns-stat">
-                <span className="ns-stat-num num">{result.candidates.length}</span>
-                <span className="ns-stat-label">candidates</span>
+                <span className="ns-stat-label">portions checked</span>
               </div>
               <div className="ns-stat">
                 <span className="ns-stat-num num">{eligibleCount}</span>
-                <span className="ns-stat-label">eligible</span>
-              </div>
-              <div className="ns-stat">
-                <span className="ns-stat-num num">{frontierCount}</span>
-                <span className="ns-stat-label">on Pareto frontier</span>
+                <span className="ns-stat-label">fit your brief</span>
               </div>
               <div className="ns-exclusions">
                 {result.skippedEquipment > 0 && (
@@ -435,9 +420,9 @@ export default function Studio() {
             </div>
           )}
 
-          {loading && !result && <p className="ns-note">Calculating…</p>}
+          {loading && <p className="ns-note" role="status">Updating your options…</p>}
 
-          {result && eligibleCount === 0 && !error && (
+          {result && !loading && eligibleCount === 0 && !error && (
             <div className="ns-nofeasible" role="alert">
               <h3>No plant-based formulation meets all of your requirements.</h3>
               <p>
@@ -461,7 +446,7 @@ export default function Studio() {
             </div>
           )}
 
-          {result && eligibleCount > 0 && (
+          {result && !loading && eligibleCount > 0 && (
             <>
               <div className="ns-cards">
                 {OBJECTIVES.map((obj) => {
@@ -511,7 +496,7 @@ export default function Studio() {
           {selected && result && (
             <article className="ns-detail" aria-labelledby="detail-heading">
               <h3 id="detail-heading" className="ns-panel-title">
-                03 · Inspect — {selected.method} · {selected.portionG} g
+                {selected.method} · {selected.portionG} g
               </h3>
 
               <div className="ns-badges" aria-label="Evidence status">
@@ -551,18 +536,24 @@ export default function Studio() {
               </div>
 
               {referenceForPortion && (
-                <p className="ns-reference">
-                  <strong>Comparison reference only:</strong> beef suya at{" "}
-                  {referenceForPortion.portionG} g — listed cost{" "}
-                  <span className="num">{naira2(referenceForPortion.costNgn)}</span>,
-                  estimated protein{" "}
-                  <span className="num">{referenceForPortion.proteinG.toFixed(1)} g</span>.
-                  The raw price and the cooked nutrient row are shown on the same gram
-                  weight; they are not one measured piece. Beef is never a recommendation.
-                </p>
+                <section className="ns-comparison" aria-labelledby="compare-heading">
+                  <h4 id="compare-heading">Original and adapted · {meal === "rice-plate" ? "suya with plain rice" : "suya"}</h4>
+                  <div className="ns-use-cases">
+                    <article><h5>Beef suya</h5><p><strong>{(referenceForPortion.proteinG + riceProteinG).toFixed(1)} g</strong> estimated protein</p><p>{naira2(referenceForPortion.costNgn)} listed suya cost · {referenceForPortion.prepMinutes} min assumed suya prep</p></article>
+                    <article><h5>{selected.method} suya</h5><p><strong>{(selected.proteinG + riceProteinG).toFixed(1)} g</strong> estimated protein</p><p>{naira2(selected.costNgn)} listed suya cost · {selected.prepMinutes} min assumed suya prep</p></article>
+                  </div>
+                  <p className="ns-note">{meal === "rice-plate" ? <>Each plate includes {RICE_PORTION_G} g plain boiled rice, adding {RICE_PROTEIN_G.toFixed(2)} g protein to the {selected.portionG} g suya component. Rice cost and prep are excluded. <a href="https://www.fao.org/infoods/infoods/tables-and-databases/faoinfoods-databases/en">FAO/INFOODS WAFCT 2019, 01_069</a>.</> : <>Both suya portions use the same modelled {selected.portionG} g serving. Listed costs are incomplete.</>}</p>
+                </section>
               )}
 
-              <h4>Why this formulation</h4>
+              {selected.feasible && (
+                <details className="ns-advanced">
+                  <summary>Meal visualisation prompt</summary>
+                  <p>Use this prompt with an image tool to explore plating. Live image generation is planned. Treat any output as a conceptual illustration.</p>
+                  <p className="ns-prompt">Concept illustration of Nigerian suya made with {selected.method.toLowerCase()}{meal === "rice-plate" ? " and a side of plain rice" : ""}. Show the awara preparation on skewers with familiar suya presentation. Label the image “Concept illustration”.</p>
+                </details>
+              )}
+
               <ul className="ns-reasons">
                 {selected.reasons.map((r) => (
                   <li key={r}>{r}</li>

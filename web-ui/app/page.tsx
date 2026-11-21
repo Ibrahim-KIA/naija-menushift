@@ -1,57 +1,58 @@
 import Studio from "@/components/Studio";
 import MenuExplorer from "@/components/MenuExplorer";
+import ServingScenario from "@/components/ServingScenario";
 
 export default function HomePage() {
   return (
     <div className="ns-shell">
+      <a className="ns-skip" href="#menu-studio">Skip to studio</a>
       <header className="ns-header">
-        <p className="ns-wordmark">Naija MenuShift</p>
-        <p className="ns-header-sub">
-          A Taste of Nigeria · Hack the Fork Nigeria 2026 · Challenge 2
-        </p>
-        <p><a href="https://naija-menushift.streamlit.app/" rel="noopener noreferrer">Open the complete Streamlit research application</a></p>
+        <a className="ns-wordmark" href="#home"><span aria-hidden="true">✳</span> Naija MenuShift</a>
+        <nav aria-label="Main navigation">
+          <a href="#menu-studio">Studio</a>
+          <a href="#institutional-planning">For institutions</a>
+        </nav>
       </header>
-
-      <section className="ns-hero">
-        <h1>Add plant-based choices to the Nigerian menu you already serve.</h1>
-        <p className="ns-hero-purpose">
-          Compare preparations for a familiar dish using your budget, equipment and
-          ingredient restrictions. Pick a promising option to test in your kitchen.
-        </p>
-        <p><strong><a href="#menu-studio">Try the suya example</a></strong> · <a href="#institutional-planning">Plan for an institutional kitchen</a></p>
-        <div className="ns-warning" role="note">
-          <strong>Research warning:</strong> this is a separate suya-focused synthetic demonstration, not the complete Python-backed multi-dish research application. Prices and
-          nutrients are illustrative estimates from reference data, not verified market
-          measurements, and no output is approved for food service. Unreviewed data is
-          labelled at the point of decision.
+      <section className="ns-hero ns-landing" id="home" aria-labelledby="hero-title">
+        <div className="ns-hero-copy">
+          <p className="ns-eyebrow">A TASTE OF NIGERIA</p>
+          <h1 id="hero-title">Familiar dishes.<br />New possibilities.</h1>
+          <p className="ns-hero-purpose">Explore plant-based versions of dishes you already serve. Compare ingredients, costs and preparation before your first kitchen trial.</p>
+          <a className="ns-cta" href="#menu-studio">Try the suya example <span aria-hidden="true">↗</span></a>
         </div>
+        <figure className="ns-hero-photo">
+          {/* The licensed photo depicts the conventional dish. */}
+          <img src="/suya.jpg" alt="Traditional suya on skewers in Kaduna, Nigeria" width="1080" height="1080" fetchPriority="high" />
+          <figcaption><strong>Traditional suya</strong><a href="https://commons.wikimedia.org/wiki/File:Suya_in_skewers.jpg">Halima Waziri</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> · Cropped</figcaption>
+        </figure>
       </section>
-
-      <main id="menu-studio">
-        <Studio />
-        <section className="ns-hero" id="institutional-planning" aria-labelledby="institutional-title">
-          <h2 id="institutional-title">From a suya trial to a full menu</h2>
-          <p><strong>Hospital catering.</strong> Start with a general catering menu and have the kitchen and a qualified dietitian review any proposed changes before service.</p>
-          <p><strong>School feeding.</strong> Check supplier capacity, service scale, student acceptance and applicable meal standards with the programme operator and nutrition team.</p>
-          <details>
-            <summary>See a complete-meal planning example</summary>
-            <h3>Eba, egusi soup and an accompaniment</h3>
-            <p>Compare a beef plate with a plant-based version using awara and a verified plant-based soup base. Confirm the stock, seasonings and every supplier ingredient before classifying the plate.</p>
-            <p>Whole-plate estimates are unavailable. We need recipe weights, cooked yields, portion sizes, matched nutrient records and current supplier quotes for both versions. Awara adds soy, and seasonings or shared equipment may introduce other allergens.</p>
-            <p>For a kitchen trial, record cooked yield, moisture and texture after holding, labour time, and cost per served portion. Record binding and emulsion stability where they affect the dish.</p>
+      <main>
+        <section className="ns-studio-section" id="menu-studio" aria-labelledby="studio-title" tabIndex={-1}>
+          <div className="ns-section-intro">
+            <div><h2 id="studio-title">Menu studio</h2><p>Choose a meal, set your limits and compare options for a trial.</p></div>
+            <details className="ns-evidence"><summary>About the estimates</summary><p>Prices and yields are demonstration inputs. Nutrients use ingredient references. Confirm supplier labels, cross-contact and actual batch yields before service.</p></details>
+          </div>
+          <Studio />
+        </section>
+        <section className="ns-institutional" id="institutional-planning" aria-labelledby="institutional-title">
+          <div className="ns-section-intro"><div><h2 id="institutional-title">Plan for an institutional kitchen</h2><p>Move from an ingredient shortlist to a trial your team can measure.</p></div></div>
+          <div className="ns-use-cases">
+            <article><h3>Hospital catering</h3><p>Start with a general catering menu. Record cost per served portion, batch yield and allergens. Have a qualified dietitian review any therapeutic use.</p></article>
+            <article><h3>School feeding</h3><p>Check supplier capacity, portions, service scale and student acceptance against the programme’s standards with its nutrition team.</p></article>
+          </div>
+          <details className="ns-plate-plan">
+            <summary>Explore an eba and egusi meal plan</summary>
+            <div className="ns-use-cases">
+              <article><h3>Original plate</h3><p>Eba, egusi soup and beef. Record the beef cut, cooked serving weight and every stock and seasoning ingredient.</p></article>
+              <article><h3>Proposed plate</h3><p>Eba, egusi soup with a verified plant-based stock, and awara. Confirm soy and other allergens, supplier specifications and texture after holding.</p></article>
+            </div>
+            <p>Complete-meal totals need weighed recipes, cooked yields, matched food composition and local quotes. Compare batch costs, moisture retention, cooking time and texture before serving.</p>
           </details>
+          <ServingScenario />
         </section>
         <MenuExplorer />
       </main>
-
-      <footer className="ns-footer">
-        <p>
-          Naija MenuShift — a bounded, explainable decision tool. A model may propose;
-          only the deterministic constraint engine decides. Beef appears as a comparison
-          reference only and is never recommended.
-        </p>
-      </footer>
+      <footer className="ns-footer"><strong>Naija MenuShift</strong><p>Kitchen planning and research</p></footer>
     </div>
   );
 }
-
