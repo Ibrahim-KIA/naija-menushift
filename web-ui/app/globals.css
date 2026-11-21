@@ -865,3 +865,15 @@ body { background: #f7f3e9; }
   .recipe-facts dd { line-height: 1.45; }
   .studio-inputs > .ns-field { margin-bottom: 0; }
 }
+
+.packet-nutrition { max-width: 32rem; border: 2px solid #183d2d; background: #fff; color: #14251c; margin: 14px 0; padding: 10px 14px; }
+.packet-nutrition h4 { font: 800 1.35rem/1.15 system-ui; margin: 0; }
+.packet-nutrition p { font-size: .78rem; margin: .4rem 0; }
+.packet-nutrition dl { border-top: 5px solid #183d2d; margin: 0; }
+.packet-nutrition dl div { display: flex; gap: .6rem; justify-content: space-between; border-bottom: 1px solid #bcc8bf; padding: .25rem 0; }
+.packet-nutrition dd { margin: 0; font-weight: 700; text-align: right; }
+.menu-concept { margin: 12px 0; }
+.menu-concept img { display: block; width: 100%; max-height: 350px; object-fit: cover; border-radius: 10px; }
+.menu-concept figcaption { font-size: .78rem; color: #41574a; }
+#feedback { margin-top: 22px; }
+#feedback textarea { width: 100%; max-width: 680px; padding: .6rem; font: inherit; border: 1px solid #8ba093; border-radius: 8px; }

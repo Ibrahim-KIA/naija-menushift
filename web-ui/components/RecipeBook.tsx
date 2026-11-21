@@ -1,3 +1,4 @@
+import NutritionPanel from "./NutritionPanel";
 import type { Candidate } from "@/lib/engine";
 import { money } from "./CandidateDetail";
 
@@ -31,6 +32,7 @@ export default function RecipeBook({ candidate, rice, dietaryReview }: {
           <div><dt>Assumed suya prep</dt><dd>{candidate.prepMinutes} min</dd></div>
           <div><dt>Listed suya cost</dt><dd>{money(candidate.costNgn)}</dd></div>
         </dl>
+        <NutritionPanel protein={candidate.proteinG + (rice ? 3.45 : 0)} portion={`${candidate.portionG} g suya portion${rice ? " with 150 g plain rice" : ""}`} />
         {dietaryReview && <p className="recipe-review" role="note"><strong>{dietaryReview}.</strong> This recipe has not been checked against that requirement. Have a qualified reviewer apply your facility’s standards before service.</p>}
         <div className="recipe-columns">
           <section aria-labelledby="ingredients-title">

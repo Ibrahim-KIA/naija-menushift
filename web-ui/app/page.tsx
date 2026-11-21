@@ -1,3 +1,4 @@
+import Feedback from "@/components/Feedback";
 import Studio from "@/components/Studio";
 import MenuExplorer from "@/components/MenuExplorer";
 import ServingScenario from "@/components/ServingScenario";
@@ -11,6 +12,7 @@ export default function HomePage() {
         <nav aria-label="Main navigation">
           <a href="#menu-studio">Studio</a>
           <a href="#menu-library">More recipes</a>
+          <a href="#feedback">Feedback</a>
           <a href="#institutional-planning">For institutions</a>
         </nav>
       </header>
@@ -60,6 +62,7 @@ export default function HomePage() {
           <ServingScenario />
         </section>
         <MenuExplorer />
+        <Feedback />
       </main>
       <footer className="ns-footer"><strong>Naija MenuShift</strong><p>Kitchen planning and research</p></footer>
     </div>
