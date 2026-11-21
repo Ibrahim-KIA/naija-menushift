@@ -10,6 +10,7 @@ export default function HomePage() {
         <a className="ns-wordmark" href="#home"><img src="/menushift-logo.png" alt="" width="38" height="38" /> Naija MenuShift</a>
         <nav aria-label="Main navigation">
           <a href="#menu-studio">Studio</a>
+          <a href="#menu-library">More recipes</a>
           <a href="#institutional-planning">For institutions</a>
         </nav>
       </header>
