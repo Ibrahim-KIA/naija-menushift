@@ -21,6 +21,8 @@ export default function Feedback() {
   return (
     <section className="ns-explorer" id="feedback" aria-labelledby="feedback-title">
       <h2 id="feedback-title" className="ns-panel-title">Optional feedback</h2>
+      <details className="studio-disclosure">
+        <summary>Leave optional feedback</summary>
       {form?.startsWith("https://") ? <a className="studio-primary" href={form}>Open the team feedback form</a> :
         <p className="ns-note">Save and export notes from this browser to share with the team. Shared submissions are unavailable. Leave out contact details and patient information.</p>}
       <form onSubmit={(event) => {
@@ -49,6 +51,7 @@ export default function Feedback() {
           setTimeout(() => URL.revokeObjectURL(url), 1000);
         }}>Export feedback notes</button>
       </details>}
+      </details>
     </section>
   );
 }
